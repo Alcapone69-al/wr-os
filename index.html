@@ -21,6 +21,7 @@
 <meta property="og:image" content="icon-512.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,600;1,700;1,800&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="firebase-config.js"></script>
 <style>[hidden]{display:none!important}img{max-width:100%}</style>
 </head>
 <body>
@@ -550,7 +551,7 @@ function syncMe(){
 function loginAs(u,rem){S.me=u;S.meT=Date.now();S.lg={};if(rem===false){lsSet("wr_sess",null);try{sessionStorage.setItem("wr_sess_s",JSON.stringify({id:u.id}))}catch(e){}}else{lsSet("wr_sess",{id:u.id,t:Date.now()});try{sessionStorage.removeItem("wr_sess_s")}catch(e){}}
   S.view="home";S.id=null;S.idx=0;S.q="";S.filter="todos";try{history.replaceState({v:"home",id:null,i:0},"")}catch(e){}
   watchFotos(null);render(true);window.scrollTo(0,0);toast("Olá, "+first(u.nome))}
-function logout(auto){lsSet("wr_sess",null);try{sessionStorage.removeItem("wr_sess_s")}catch(e){}S.me=null;S.lg={};S.view="home";S.id=null;S.idx=0;closeSheet();watchFotos(null);render(true);if(auto)toast("Sessão terminada por inatividade")}
+function logout(auto){if(window.__fbAuth){window.__fbAuth.signOut();return}lsSet("wr_sess",null);try{sessionStorage.removeItem("wr_sess_s")}catch(e){}S.me=null;S.lg={};S.view="home";S.id=null;S.idx=0;closeSheet();watchFotos(null);render(true);if(auto)toast("Sessão terminada por inatividade")}
 
 /* ===== toque, vibração, instalação ===== */
 function haptic(k){
@@ -596,12 +597,35 @@ function localLoad(){
 async function initData(){
   try{db=(window.claude&&window.claude.use)?await window.claude.use("db"):null}catch(e){db=null}
   try{downloads=(window.claude&&window.claude.use)?await window.claude.use("downloads"):null}catch(e){downloads=null}
-  if(!db){localLoad();return}
+  if(!db){if(fbCfg()){initCloud(fbCfg());return}localLoad();return}
   S.mode="cloud";
   function sub(col){db.collection(col).onSnapshot(function(snap){
       S[col]=snap.docs.map(function(d){var x=d.data();x.id=d.id;return x});if(col==="users")S.usersReady=true;render()},
     function(err){console.warn("db",err);db=null;localLoad()})}
   sub("os");sub("estoque");sub("users");
+}
+/* ===== nuvem própria (Firebase, conta única da oficina) ===== */
+var FBU={id:"conta",nome:"WR Auto Body",papel:"proprietario",email:"",ativo:true},fbUnsubs=[];
+function fbCfg(){var c=window.WR_FIREBASE;return (!window.claude&&c&&c.apiKey&&c.projectId)?c:null}
+function loadJs(src){return new Promise(function(res,rej){var e=document.createElement("script");e.src=src;e.onload=res;e.onerror=function(){rej(new Error(src))};document.head.appendChild(e)})}
+function fbSub(col){
+  var u=db.collection(col).onSnapshot(function(snap){
+    S[col]=snap.docs.map(function(d){var x=d.data();x.id=d.id;return x});
+    if(col==="os"&&S.mode==="loading")S.mode="cloud";render()},
+   function(err){console.warn("db",col,err);if(S.mode==="loading")S.mode="cloud";toast(err&&err.code==="permission-denied"?"Sem permissão na base de dados":"Sem ligação à base de dados");render()});
+  fbUnsubs.push(u)}
+function fbStop(){fbUnsubs.forEach(function(u){try{u()}catch(e){}});fbUnsubs=[];S.os=[];S.estoque=[];S.fotos=[]}
+async function initCloud(cfg){
+  S.users=[FBU];
+  try{
+    await loadJs("vendor/firebase-app-compat.js");await loadJs("vendor/firebase-auth-compat.js");await loadJs("vendor/firebase-firestore-compat.js");
+    firebase.initializeApp(cfg);var auth=firebase.auth(),fs=firebase.firestore();
+    try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
+    window.__fbAuth=auth;
+    auth.onAuthStateChanged(function(u){
+      if(u){db=fs;FBU.email=u.email||"";S.me=FBU;S.meT=Date.now();S.usersReady=true;S.mode="loading";fbStop();fbSub("os");fbSub("estoque");S.view="home";S.id=null;render(true)}
+      else{fbStop();db=null;S.me=null;S.mode="cloud";S.usersReady=true;render(true)}});
+  }catch(e){console.warn("cloud",e);S.users=[];toast("Não foi possível iniciar a nuvem. A usar este aparelho.");localLoad()}
 }
 function repoUpdate(col,item,patch){
   patch=Object.assign({},patch,{atualizado:Date.now()});
@@ -1011,10 +1035,11 @@ function viewLogin(){
     '<div class="card"><div class="field"><label for="l-e">E-mail</label><input class="in" id="l-e" type="email" inputmode="email" autocapitalize="off" autocomplete="username" spellcheck="false" enterkeyhint="next" value="'+esc(L.email||"")+'"></div>'+
     '<div class="field"><label for="l-p">Palavra-passe</label><div style="position:relative"><input class="in" id="l-p" type="password" autocomplete="current-password" enterkeyhint="go">'+eye+'</div></div>'+
     '<div class="lerr'+(L.err?" bad":"")+'" role="alert">'+esc(L.err||"")+'</div><button class="btn pri block" data-act="login">Entrar</button>'+
-    '<p class="muted" style="font-size:12.5px;margin-top:10px;text-align:center">Esqueceu a palavra-passe? Peça ao proprietário para a redefinir em Equipa.</p></div>'+
+    '<p class="muted" style="font-size:12.5px;margin-top:10px;text-align:center">'+(fbCfg()?"Conta única da oficina, partilhada pelo tablet e pelo computador.":"Esqueceu a palavra-passe? Peça ao proprietário para a redefinir em Equipa.")+'</p></div>'+
     (dm.length?'<div class="demo-hint"><b>Contas de exemplo</b> (palavra-passe '+DEMOPW+')<br>'+dm.map(function(x){return '<button data-act="fill" data-e="'+esc(x.email)+'" style="background:none;border:0;padding:2px 0;color:var(--focus);text-align:left">'+esc(x.email)+'</button> · '+esc(ROLES[x.papel])}).join("<br>")+'</div>':'')+'</div>';
 }
 function doLogin(email,pw,rem){
+  if(window.__fbAuth)return window.__fbAuth.signInWithEmailAndPassword(String(email||"").trim(),pw).then(function(){return {user:FBU}},function(e){var c=(e&&e.code)||"";return {err:/network/.test(c)?"Sem ligação à internet":/too-many/.test(c)?"Muitas tentativas. Aguarde uns minutos":"E-mail ou palavra-passe errados"}});
   var now=Date.now();
   if(S.lock&&now<S.lock)return Promise.resolve({err:"Muitas tentativas. Aguarde "+Math.ceil((S.lock-now)/1000)+" segundos"});
   var u=S.users.filter(function(x){return norm(x.email)===norm(email)&&x.ativo!==false})[0];
@@ -1040,6 +1065,8 @@ function viewTeam(){
 }
 function sheetConta(){
   var u=S.me;
+  if(window.__fbAuth){sheet('<h3>Conta da oficina</h3><div class="rowc" style="margin-top:10px"><span class="av">'+esc(ini(u.nome))+'</span><span class="bd"><b>'+esc(u.nome)+'</b><span>'+esc(u.email||"")+'</span></span></div><p class="muted" style="font-size:12.5px">Conta única partilhada. Os dados são os mesmos em todos os aparelhos.</p>'+
+   '<button class="opt" data-act="logout"><span>Terminar sessão neste aparelho</span>'+ic("back")+'</button><button class="btn block" style="margin-top:12px" data-act="closesheet">Fechar</button>');return}
   sheet('<h3>Conta</h3><div class="rowc" style="margin-top:10px"><span class="av">'+esc(ini(u.nome))+'</span><span class="bd"><b>'+esc(u.nome)+'</b><span>'+esc(u.email||"")+' · '+esc(ROLES[u.papel])+'</span></span></div>'+
    (can("equipa")?'<button class="opt" data-act="goteam"><span>Equipa e permissões</span>'+ic("users")+'</button>':'')+
    '<button class="opt" data-act="sheet-mypin"><span>Alterar a minha palavra-passe</span>'+ic("lock")+'</button>'+
@@ -1362,7 +1389,7 @@ document.addEventListener("keydown",function(e){
   else if(/^u-(n|e|p|p2)$/.test(t.id)){e.preventDefault();var c=document.querySelector('[data-act="setup"]');if(c)c.click()}});
 document.addEventListener("visibilitychange",function(){
   if(document.hidden)hiddenAt=Date.now();
-  else if(S.me&&hiddenAt&&Date.now()-hiddenAt>10*60*1000)logout(true)});
+  else if(S.me&&!window.__fbAuth&&hiddenAt&&Date.now()-hiddenAt>10*60*1000)logout(true)});
 
 /* ===== arranque ===== */
 try{history.replaceState({v:"home",id:null,i:0},"")}catch(e){}
@@ -1636,7 +1663,7 @@ function initLogin(){
       A.login(email,pw,rem).then(function(r){if(r.user)unlock(rem);else{Go.disabled=false;P.value="";bad(r.err||"Email ou palavra-passe errados","wPass")}});
     }
   });
-  $("inForgot").onclick=function(){bad("Peça ao proprietário para redefinir a palavra-passe em Equipa.")};
+  $("inForgot").onclick=function(){bad("Peça ao responsável da oficina para redefinir a palavra-passe.")};
   $("inDemo").onclick=function(){A.demo().then(function(){mode="enter";setMode()})};
   $("inHint").addEventListener("click",function(ev){var a=ev.target.closest("a");if(!a)return;ev.preventDefault();E.value=a.dataset.e;P.value=A.pw});
   setMode();
