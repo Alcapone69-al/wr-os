@@ -366,7 +366,8 @@ body.kb{padding-bottom:24px}
 .kp button{height:58px;border-radius:16px;border:1px solid var(--line);background:var(--surface);font-family:var(--f-display);font-size:26px;font-weight:700}
 .kp button:active{background:var(--surface2);transform:scale(.96)}
 .kp .ghost{background:none;border-color:transparent;font-size:14px;font-family:var(--f-body);font-weight:600;color:var(--ink2)}
-.lerr{color:var(--bad);min-height:20px;font-size:13.5px}
+.lerr.bad{color:var(--bad)}
+.lerr{color:var(--ink2);min-height:20px;font-size:13.5px}
 .demo-hint{width:100%;text-align:left;font-size:12.5px;color:var(--ink2);border:1px dashed var(--line);border-radius:12px;padding:10px 12px}
 .demo-hint b{color:var(--ink)}
 .role{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--surface2);border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
@@ -382,10 +383,29 @@ body.kb{padding-bottom:24px}
 .perm div .role{margin-right:8px}
 .qtyro{font-weight:700;min-width:38px;text-align:center}
 body.lock .tabs{display:none}
+
+/* fundo animado do login */
+#fx{display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:0;pointer-events:none;overflow:hidden;background:radial-gradient(80% 55% at 50% 22%,rgba(227,30,30,.16),transparent 62%)}
+body.lock #fx{display:block}
+.app{position:relative;z-index:1}
+#fxc{position:absolute;top:0;left:0;width:100%;height:100%;opacity:.55}
+.fxl i{position:absolute;background:var(--line);will-change:transform,opacity;opacity:.7}
+.fxl i.h{left:0;right:0;height:1px;transform:scaleX(0);animation:drawX .8s cubic-bezier(.22,.61,.36,1) forwards}
+.fxl i.v{top:0;bottom:0;width:1px;transform:scaleY(0);transform-origin:50% 0;animation:drawY .9s cubic-bezier(.22,.61,.36,1) forwards}
+.fxl i:nth-child(1){top:18%;animation-delay:.12s}.fxl i:nth-child(2){top:50%;animation-delay:.22s}.fxl i:nth-child(3){top:82%;animation-delay:.32s}
+.fxl i:nth-child(4){left:22%;animation-delay:.42s}.fxl i:nth-child(5){left:50%;animation-delay:.54s}.fxl i:nth-child(6){left:78%;animation-delay:.66s}
+.fxl i:nth-child(2),.fxl i:nth-child(5){background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.fxl i.v:nth-child(5){background:linear-gradient(180deg,var(--red),transparent)}
+@keyframes drawX{0%{transform:scaleX(0);opacity:0}60%{opacity:.95}100%{transform:scaleX(1);opacity:.7}}
+@keyframes drawY{0%{transform:scaleY(0);opacity:0}60%{opacity:.95}100%{transform:scaleY(1);opacity:.7}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.login .llogo,.login h1,.login h2,.login .ulist,.login .kp,.login .card,.login .demo-hint,.login>.btn{opacity:0;animation:fadeUp .8s cubic-bezier(.22,.61,.36,1) .4s forwards}
+.login .card,.login .ulist .rowc{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (max-width:380px){.acts{gap:0}.act i{width:42px;height:42px}.act{font-size:10.5px}}
 </style>
 
+<div id="fx" aria-hidden="true"><div class="fxl"><i class="h"></i><i class="h"></i><i class="h"></i><i class="v"></i><i class="v"></i><i class="v"></i></div><canvas id="fxc"></canvas></div>
 <div class="app" id="app"></div>
 <div id="layer"></div>
 <nav class="tabs" id="tabs" aria-label="Navegação"></nav>
@@ -413,7 +433,7 @@ var MAXFOTOS=12;
 
 /* ===== estado ===== */
 var S={os:[],estoque:[],fotos:[],mode:"loading",view:"home",id:null,filter:"todos",q:"",open:{},deferred:false,period:"30",from:"home",idx:0,users:[],usersReady:false,me:null,meT:0,lg:{}};
-var sheetSeq=0,sheetOpen=false,scrolls={},deferredPrompt=null,hapEl=null,HAP={tab:"s",open:"s",filter:"s",chk:"s",grp:"s",svtoggle:"s",stk:"s","sheet-status":"s",setst:"ok",kp:"s",create:"ok",addpeca:"ok",addorc:"ok",addpay:"ok",savelem:"ok",savestock:"ok",saveedit:"ok",addlink:"ok",aprov:"ok",lemdone:"ok",confirmdelete:"hv",delfoto:"hv",clear:"hv",delpeca:"hv",delorc:"hv"};
+var sheetSeq=0,sheetOpen=false,scrolls={},deferredPrompt=null,hapEl=null,HAP={tab:"s",open:"s",filter:"s",chk:"s",grp:"s",svtoggle:"s",stk:"s","sheet-status":"s",setst:"ok",create:"ok",addpeca:"ok",addorc:"ok",addpay:"ok",savelem:"ok",savestock:"ok",saveedit:"ok",addlink:"ok",aprov:"ok",lemdone:"ok",confirmdelete:"hv",delfoto:"hv",clear:"hv",delpeca:"hv",delorc:"hv"};
 var db=null,downloads=null,unsubFotos=null,fotosFor=null,LS={os:"wr_os",estoque:"wr_estoque",users:"wr_users"},hiddenAt=0;
 
 /* ===== utilitários ===== */
@@ -486,7 +506,7 @@ var PERM={proprietario:ALLP,gerente:ALLP.filter(function(p){return p!=="equipa"}
   mecanico:["estoque"]};
 var ACT_PERM={create:"os.criar",saveedit:"os.editar",edit:"os.editar",askdelete:"os.apagar",confirmdelete:"os.apagar","sheet-orc":"valores","sheet-doc":"valores","sheet-pay":"valores",addorc:"valores",delorc:"valores",aprov:"valores",pdf:"valores",addpay:"valores",delpay:"valores","sheet-stock":"estoque.editar",savestock:"estoque.editar",delstock:"estoque.editar",stk:"estoque.editar",askclear:"equipa",clear:"equipa","sheet-user":"equipa",saveuser:"equipa",askdeluser:"equipa",deluser:"equipa",goteam:"equipa"};
 var VIEW_PERM={"new":"os.criar",edit:"os.editar",clients:"clientes",rel:"relatorios",team:"equipa"};
-var DEMOPIN={William:"1234",Marta:"4444",Ana:"2222",Stiff:"1111",Jorge:"3333"};
+var DEMOPW="wr1234",DEMO={William:{e:"william@wr.demo"},Marta:{e:"marta@wr.demo"},Ana:{e:"ana@wr.demo"},Stiff:{e:"stiff@wr.demo"},Jorge:{e:"jorge@wr.demo"}};
 function can(p){return !!(S.me&&PERM[S.me.papel]&&PERM[S.me.papel].indexOf(p)>-1)}
 function norm(t){return String(t||"").trim().toLowerCase()}
 function mine(o){return !!S.me&&norm(o.mecanico)===norm(S.me.nome)}
@@ -500,19 +520,19 @@ function hashPin(pin,salt){
   try{if(window.crypto&&crypto.subtle&&window.TextEncoder)return crypto.subtle.digest("SHA-256",new TextEncoder().encode(t)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return x.toString(16).padStart(2,"0")}).join("")})}catch(e){}
   var h=5381,i;for(i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return Promise.resolve("f"+(h>>>0).toString(16));
 }
-function mkUser(nome,papel,pin,extra){var salt=uid();return hashPin(pin,salt).then(function(h){return repoCreate("users",Object.assign({nome:nome,papel:papel,salt:salt,hash:h,ativo:true},extra||{}))})}
+function mkUser(nome,papel,email,pw,extra){var salt=uid();return hashPin(pw,salt).then(function(h){return repoCreate("users",Object.assign({nome:nome,papel:papel,email:String(email||"").trim().toLowerCase(),salt:salt,hash:h,ativo:true},extra||{}))})}
 function syncMe(){
   if(S.me){var u=getUser(S.me.id);
     if(u&&u.ativo!==false){S.me=u;return}
     if(!u&&Date.now()-S.meT<6000)return;
     S.me=null;lsSet("wr_sess",null);return}
-  var ss=lsGet("wr_sess",null);
+  var ss=lsGet("wr_sess",null);if(!ss){try{ss=JSON.parse(sessionStorage.getItem("wr_sess_s")||"null")}catch(e){}}
   if(ss&&ss.id){var u2=getUser(ss.id);if(u2&&u2.ativo!==false){S.me=u2;S.meT=Date.now()}}
 }
-function loginAs(u){S.me=u;S.meT=Date.now();S.lg={};lsSet("wr_sess",{id:u.id,t:Date.now()});
+function loginAs(u,rem){S.me=u;S.meT=Date.now();S.lg={};if(rem===false){lsSet("wr_sess",null);try{sessionStorage.setItem("wr_sess_s",JSON.stringify({id:u.id}))}catch(e){}}else{lsSet("wr_sess",{id:u.id,t:Date.now()});try{sessionStorage.removeItem("wr_sess_s")}catch(e){}}
   S.view="home";S.id=null;S.idx=0;S.q="";S.filter="todos";try{history.replaceState({v:"home",id:null,i:0},"")}catch(e){}
   watchFotos(null);render(true);window.scrollTo(0,0);toast("Olá, "+first(u.nome))}
-function logout(auto){lsSet("wr_sess",null);S.me=null;S.lg={};S.view="home";S.id=null;S.idx=0;closeSheet();watchFotos(null);render(true);if(auto)toast("Sessão terminada por inatividade")}
+function logout(auto){lsSet("wr_sess",null);try{sessionStorage.removeItem("wr_sess_s")}catch(e){}S.me=null;S.lg={};S.view="home";S.id=null;S.idx=0;closeSheet();watchFotos(null);render(true);if(auto)toast("Sessão terminada por inatividade")}
 
 /* ===== toque, vibração, instalação ===== */
 function haptic(k){
@@ -919,58 +939,79 @@ function viewReports(){
    '<section class="sec">'+hdr("Faturação por mecânico")+'<div class="card">'+bars(mc,mt)+'</div></section>';
 }
 
+/* ===== fundo do login ===== */
+var fxRaf=0,fxRun=false,fxResize=null;
+function fxStart(){
+  if(fxRun)return;var cv=$("#fxc");if(!cv)return;var cx=cv.getContext("2d");if(!cx)return;
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  fxRun=true;var m=(getComputedStyle(document.body).color.match(/\d+/g)||[243,244,246]),rgb=m[0]+","+m[1]+","+m[2],ps=[];
+  function size(){cv.width=window.innerWidth;cv.height=window.innerHeight;ps=[];var n=Math.min(180,Math.floor(cv.width*cv.height/9000));for(var i=0;i<n;i++)ps.push(mk(false))}
+  function mk(low){return {x:Math.random()*cv.width,y:low?cv.height+Math.random()*40:Math.random()*cv.height,v:Math.random()*.25+.05,o:Math.random()*.35+.15}}
+  function draw(){cx.clearRect(0,0,cv.width,cv.height);
+    for(var i=0;i<ps.length;i++){var p=ps[i];p.y-=p.v;if(p.y<0){ps[i]=p=mk(true)}cx.fillStyle="rgba("+rgb+","+p.o+")";cx.fillRect(p.x,p.y,.8,2.4)}
+    fxRaf=requestAnimationFrame(draw)}
+  fxResize=size;window.addEventListener("resize",size);size();
+  var l=document.querySelector(".fxl");if(l){var c=l.cloneNode(true);l.parentNode.replaceChild(c,l)}
+  fxRaf=requestAnimationFrame(draw);
+}
+function fxStop(){if(!fxRun)return;fxRun=false;cancelAnimationFrame(fxRaf);if(fxResize)window.removeEventListener("resize",fxResize)}
+
 /* ===== login, conta e equipa ===== */
 function viewLogin(){
   var L=S.lg,logo='<img class="llogo" alt="WR Auto Body" src="'+LOGO+'">';
-  if(!S.users.length)return '<div class="login">'+logo+'<h1>Bem-vindo</h1><p class="muted">Crie a conta do proprietário. Depois adicione a equipa: gerente, recepção e mecânicos, cada um com o seu PIN.</p>'+
-    '<div class="card"><div class="field"><label for="u-n">O seu nome</label><input class="in" id="u-n" autocapitalize="words" autocomplete="off" enterkeyhint="next"></div>'+
-    '<div class="two"><div class="field"><label for="u-p">PIN (4 números)</label><input class="in" id="u-p" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>'+
-    '<div class="field"><label for="u-p2">Repetir PIN</label><input class="in" id="u-p2" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div></div>'+
-    '<button class="btn pri block" data-act="setup">Criar conta do proprietário</button></div>'+
+  var eye='<button type="button" class="x" data-act="eye" aria-label="Mostrar palavra-passe" style="position:absolute;right:2px;top:2px">'+ic("img").replace(P.img,'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>')+'</button>';
+  if(!S.users.length)return '<div class="login">'+logo+'<h1>Bem-vindo</h1><p class="muted">Crie a conta do proprietário. Depois adicione a equipa: gerente, recepção e mecânicos, cada um com o seu e-mail e palavra-passe.</p>'+
+    '<div class="card"><div class="field"><label for="u-n">O seu nome</label><input class="in" id="u-n" autocapitalize="words" autocomplete="name" enterkeyhint="next"></div>'+
+    '<div class="field"><label for="u-e">E-mail</label><input class="in" id="u-e" type="email" inputmode="email" autocapitalize="off" autocomplete="username" spellcheck="false" enterkeyhint="next"></div>'+
+    '<div class="field"><label for="u-p">Palavra-passe (mínimo 6)</label><div style="position:relative"><input class="in" id="u-p" type="password" autocomplete="new-password" enterkeyhint="next">'+eye+'</div></div>'+
+    '<div class="field"><label for="u-p2">Repetir palavra-passe</label><input class="in" id="u-p2" type="password" autocomplete="new-password" enterkeyhint="go"></div>'+
+    '<div class="lerr'+(L.err?" bad":"")+'" role="alert">'+esc(L.err||"")+'</div><button class="btn pri block" data-act="setup">Criar conta do proprietário</button></div>'+
     '<button class="btn block" data-act="demousers">Explorar com contas de exemplo</button></div>';
-  if(L.uid){var u=getUser(L.uid);
-    if(!u){S.lg={};return viewLogin()}
-    var dots="";for(var i=0;i<4;i++)dots+='<i class="'+(i<(L.pin||"").length?"on":"")+'"></i>';
-    var locked=L.lock&&Date.now()<L.lock;
-    return '<div class="login">'+logo+'<span class="av" style="width:64px;height:64px;font-size:30px">'+esc(ini(u.nome))+'</span><div><h2>'+esc(u.nome)+'</h2><span class="role r-'+esc(u.papel)+'">'+esc(ROLES[u.papel])+'</span></div>'+
-      '<div class="dots'+(L.shake?" shake":"")+'" aria-label="PIN">'+dots+'</div><div class="lerr" role="alert">'+esc(L.err||(locked?"Aguarde um momento":"Introduza o PIN"))+'</div>'+
-      '<div class="kp">'+[1,2,3,4,5,6,7,8,9].map(function(n){return '<button data-act="kp" data-d="'+n+'">'+n+'</button>'}).join("")+'<button class="ghost" data-act="lgback">Voltar</button><button data-act="kp" data-d="0">0</button><button class="ghost" data-act="kp" data-d="del" aria-label="Apagar">⌫</button></div></div>';}
-  var us=S.users.filter(function(x){return x.ativo!==false}).sort(function(a,b){var o=["proprietario","gerente","recepcao","mecanico"];return o.indexOf(a.papel)-o.indexOf(b.papel)||String(a.nome).localeCompare(String(b.nome))});
-  var dm=us.filter(function(x){return x.demo&&DEMOPIN[x.nome]});
-  return '<div class="login">'+logo+'<h1>Entrar</h1><p class="muted">Escolha o seu nome e introduza o PIN.</p><div class="ulist">'+
-    us.map(function(x){return '<button class="rowc" data-act="pickuser" data-id="'+esc(x.id)+'"><span class="av">'+esc(ini(x.nome))+'</span><span class="bd"><b>'+esc(x.nome)+'</b><span>'+esc(ROLES[x.papel])+'</span></span>'+ic("chev").replace('class="i ','style="transform:rotate(-90deg)" class="i ')+'</button>'}).join("")+'</div>'+
-    (dm.length?'<div class="demo-hint"><b>Contas de exemplo</b><br>'+dm.map(function(x){return esc(x.nome)+" ("+esc(ROLES[x.papel])+") · PIN "+DEMOPIN[x.nome]}).join("<br>")+'</div>':'')+'</div>';
+  var o2=["proprietario","gerente","recepcao","mecanico"],dm=S.users.filter(function(x){return x.demo&&DEMO[x.nome]}).sort(function(x,y){return o2.indexOf(x.papel)-o2.indexOf(y.papel)||String(x.nome).localeCompare(String(y.nome))});
+  return '<div class="login">'+logo+'<h1>Entrar</h1><p class="muted">Entre com o seu e-mail e palavra-passe.</p>'+
+    '<div class="card"><div class="field"><label for="l-e">E-mail</label><input class="in" id="l-e" type="email" inputmode="email" autocapitalize="off" autocomplete="username" spellcheck="false" enterkeyhint="next" value="'+esc(L.email||"")+'"></div>'+
+    '<div class="field"><label for="l-p">Palavra-passe</label><div style="position:relative"><input class="in" id="l-p" type="password" autocomplete="current-password" enterkeyhint="go">'+eye+'</div></div>'+
+    '<div class="lerr'+(L.err?" bad":"")+'" role="alert">'+esc(L.err||"")+'</div><button class="btn pri block" data-act="login">Entrar</button>'+
+    '<p class="muted" style="font-size:12.5px;margin-top:10px;text-align:center">Esqueceu a palavra-passe? Peça ao proprietário para a redefinir em Equipa.</p></div>'+
+    (dm.length?'<div class="demo-hint"><b>Contas de exemplo</b> (palavra-passe '+DEMOPW+')<br>'+dm.map(function(x){return '<button data-act="fill" data-e="'+esc(x.email)+'" style="background:none;border:0;padding:2px 0;color:var(--focus);text-align:left">'+esc(x.email)+'</button> · '+esc(ROLES[x.papel])}).join("<br>")+'</div>':'')+'</div>';
 }
-function tryPin(){
-  var L=S.lg,u=getUser(L.uid);if(!u)return;
-  hashPin(L.pin,u.salt).then(function(h){
-    if(h===u.hash){haptic("ok");loginAs(u);return}
-    L.fails=(L.fails||0)+1;L.pin="";L.shake=true;L.err="PIN incorreto";haptic("hv");
-    if(L.fails>=5){L.lock=Date.now()+30000;L.fails=0;L.err="Muitas tentativas. Aguarde 30 segundos"}
-    render(true);setTimeout(function(){L.shake=false},500)});
+function doLogin(email,pw,rem){
+  var now=Date.now();
+  if(S.lock&&now<S.lock)return Promise.resolve({err:"Muitas tentativas. Aguarde "+Math.ceil((S.lock-now)/1000)+" segundos"});
+  var u=S.users.filter(function(x){return norm(x.email)===norm(email)&&x.ativo!==false})[0];
+  var bad=function(){S.fails=(S.fails||0)+1;if(S.fails>=5){S.fails=0;S.lock=Date.now()+30000;return {err:"Muitas tentativas. Aguarde 30 segundos"}}return {err:"E-mail ou palavra-passe errados"}};
+  if(!u)return Promise.resolve(bad());
+  return hashPin(pw,u.salt).then(function(h){if(h!==u.hash)return bad();S.fails=0;loginAs(u,rem);return {user:u}});
 }
+window.__wrAuth={ready:function(){return S.usersReady},count:function(){return S.users.length},hasSession:function(){if(S.usersReady)syncMe();return !!S.me},
+  login:doLogin,demo:function(){return mkDemo()},
+  create:function(n,e,p){return mkUser(n,"proprietario",e,p).then(function(u){if(u)loginAs(u,true);return u})},
+  demoList:function(){var o=["proprietario","gerente","recepcao","mecanico"];return S.users.filter(function(x){return x.demo&&DEMO[x.nome]}).sort(function(x,y){return o.indexOf(x.papel)-o.indexOf(y.papel)||String(x.nome).localeCompare(String(y.nome))}).map(function(x){return {email:x.email,papel:ROLES[x.papel]}})},pw:DEMOPW};
+function mkDemo(){var dl=[["William","proprietario"],["Marta","gerente"],["Ana","recepcao"],["Stiff","mecanico"],["Jorge","mecanico"]];
+  return Promise.all(dl.map(function(d){return mkUser(d[0],d[1],DEMO[d[0]].e,DEMOPW,{demo:true})})).then(function(){render(true)})}
 function viewTeam(){
   var order=["proprietario","gerente","recepcao","mecanico"];
   var us=S.users.slice().sort(function(a,b){return order.indexOf(a.papel)-order.indexOf(b.papel)||String(a.nome).localeCompare(String(b.nome))});
   var r=topbar()+'<section class="sec" style="margin-top:12px"><button class="back" data-act="back">'+ic("back")+'Voltar</button>'+hdr("Equipa",us.length+" utilizador(es)",'<button class="btn sm pri" data-act="sheet-user">+ Utilizador</button>')+'<div class="list">';
   r+=us.map(function(x){var n=S.os.filter(function(o){return norm(o.mecanico)===norm(x.nome)&&o.estado!=="finalizado"}).length;
-    return '<button class="rowc" data-act="sheet-user" data-id="'+esc(x.id)+'"'+(x.ativo===false?' style="opacity:.55"':'')+'><span class="av">'+esc(ini(x.nome))+'</span><span class="bd"><b>'+esc(x.nome)+(S.me&&x.id===S.me.id?" (eu)":"")+(x.demo?'<span class="tag">Exemplo</span>':'')+'</b><span>'+(x.ativo===false?"Acesso suspenso":x.papel==="mecanico"?n+" obra(s) em curso":"Sem restrições de obras")+'</span></span><span class="role r-'+esc(x.papel)+'">'+esc(ROLES[x.papel])+'</span></button>'}).join("");
+    return '<button class="rowc" data-act="sheet-user" data-id="'+esc(x.id)+'"'+(x.ativo===false?' style="opacity:.55"':'')+'><span class="av">'+esc(ini(x.nome))+'</span><span class="bd"><b>'+esc(x.nome)+(S.me&&x.id===S.me.id?" (eu)":"")+(x.demo?'<span class="tag">Exemplo</span>':'')+'</b><span>'+esc(x.email||"")+(x.ativo===false?" · acesso suspenso":x.papel==="mecanico"?" · "+n+" obra(s)":"")+'</span></span><span class="role r-'+esc(x.papel)+'">'+esc(ROLES[x.papel])+'</span></button>'}).join("");
   r+='</div></section><section class="sec">'+hdr("O que cada função vê")+'<div class="card perm">'+order.map(function(k){return '<div><span class="role r-'+k+'">'+ROLES[k]+'</span>'+esc(ROLEDESC[k])+'</div>'}).join("")+'</div>'+
     '<p class="muted" style="font-size:12.5px;margin-top:10px">As obras são atribuídas ao mecânico no campo "Mecânico responsável" da O.S. Os afazeres dele são os lembretes dessas obras.</p></section>';
   return r;
 }
 function sheetConta(){
   var u=S.me;
-  sheet('<h3>Conta</h3><div class="rowc" style="margin-top:10px"><span class="av">'+esc(ini(u.nome))+'</span><span class="bd"><b>'+esc(u.nome)+'</b><span>'+esc(ROLES[u.papel])+'</span></span></div>'+
+  sheet('<h3>Conta</h3><div class="rowc" style="margin-top:10px"><span class="av">'+esc(ini(u.nome))+'</span><span class="bd"><b>'+esc(u.nome)+'</b><span>'+esc(u.email||"")+' · '+esc(ROLES[u.papel])+'</span></span></div>'+
    (can("equipa")?'<button class="opt" data-act="goteam"><span>Equipa e permissões</span>'+ic("users")+'</button>':'')+
-   '<button class="opt" data-act="sheet-mypin"><span>Alterar o meu PIN</span>'+ic("lock")+'</button>'+
+   '<button class="opt" data-act="sheet-mypin"><span>Alterar a minha palavra-passe</span>'+ic("lock")+'</button>'+
    '<button class="opt" data-act="logout"><span>Terminar sessão</span>'+ic("back")+'</button>'+
    '<button class="btn block" style="margin-top:12px" data-act="closesheet">Fechar</button>');
 }
 function sheetMyPin(forced){
-  sheet('<h3>Alterar PIN</h3>'+(forced?'<div class="muted">Defina um novo PIN para a sua conta.</div>':'')+
-   '<div class="field"><label for="p-o">PIN atual</label><input class="in" id="p-o" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>'+
-   '<div class="two"><div class="field"><label for="p-n">Novo PIN</label><input class="in" id="p-n" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div><div class="field"><label for="p-n2">Repetir</label><input class="in" id="p-n2" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div></div>'+
+  sheet('<h3>Alterar palavra-passe</h3>'+(forced?'<div class="muted">Defina uma nova palavra-passe para a sua conta.</div>':'')+
+   '<div class="field"><label for="p-o">Palavra-passe atual</label><input class="in" id="p-o" type="password" autocomplete="current-password"></div>'+
+   '<div class="field"><label for="p-n">Nova palavra-passe (mínimo 6)</label><input class="in" id="p-n" type="password" autocomplete="new-password"></div>'+
+   '<div class="field"><label for="p-n2">Repetir</label><input class="in" id="p-n2" type="password" autocomplete="new-password"></div>'+
    '<div class="row" style="margin-top:16px"><button class="btn pri" style="flex:1" data-act="savepin">Guardar</button><button class="btn" data-act="closesheet">Fechar</button></div>');
   focusFirst();
 }
@@ -978,8 +1019,9 @@ function sheetUser(u){
   u=u||{};
   sheet('<h3>'+(u.id?"Editar utilizador":"Novo utilizador")+'</h3>'+
    '<div class="field"><label for="u-nome">Nome</label><input class="in" id="u-nome" autocapitalize="words" autocomplete="off" value="'+esc(u.nome)+'"></div>'+
+   '<div class="field"><label for="u-mail">E-mail</label><input class="in" id="u-mail" type="email" inputmode="email" autocapitalize="off" autocomplete="off" spellcheck="false" value="'+esc(u.email)+'"></div>'+
    '<div class="field"><label for="u-papel">Função</label><select class="in" id="u-papel">'+Object.keys(ROLES).map(function(k){return '<option value="'+k+'"'+((u.papel||"mecanico")===k?" selected":"")+'>'+ROLES[k]+'</option>'}).join("")+'</select></div>'+
-   '<div class="field"><label for="u-pin">'+(u.id?"Novo PIN (deixe vazio para manter)":"PIN (4 números)")+'</label><input class="in" id="u-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></div>'+
+   '<div class="field"><label for="u-pin">'+(u.id?"Nova palavra-passe (deixe vazio para manter)":"Palavra-passe (mínimo 6)")+'</label><input class="in" id="u-pin" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>'+
    (u.id?'<label class="row" style="margin-top:6px;gap:10px;flex-wrap:nowrap"><input type="checkbox" id="u-ativo"'+(u.ativo!==false?" checked":"")+' style="width:20px;height:20px;accent-color:var(--red)"><span>Acesso ativo</span></label>':'')+
    '<div class="row" style="margin-top:16px"><button class="btn pri" style="flex:1" data-act="saveuser" data-id="'+esc(u.id||"")+'">Guardar</button>'+(u.id&&S.me&&u.id!==S.me.id?'<button class="btn danger" data-act="askdeluser" data-id="'+esc(u.id)+'">Remover</button>':'')+'<button class="btn" data-act="closesheet">Fechar</button></div>');
   focusFirst();
@@ -1076,8 +1118,8 @@ function render(force){
   S.deferred=false;
   if(!S.usersReady||S.mode==="loading"){APP.innerHTML=topbar()+skeleton();$("#tabs").innerHTML="";return}
   syncMe();
-  if(!S.me){APP.innerHTML=viewLogin();$("#tabs").innerHTML="";document.body.classList.add("lock");return}
-  document.body.classList.remove("lock");
+  if(!S.me){APP.innerHTML=viewLogin();$("#tabs").innerHTML="";document.body.classList.add("lock");fxStart();return}
+  document.body.classList.remove("lock");fxStop();
   if(VIEW_PERM[S.view]&&!can(VIEW_PERM[S.view]))S.view="home";
   var sy=window.scrollY,V=S.view;
   APP.innerHTML=V==="home"?viewHome():V==="list"?viewList():V==="new"?viewNew():V==="edit"?viewEdit():V==="clients"?viewClients():V==="stock"?viewStock():V==="rel"?viewReports():V==="team"?viewTeam():viewDetail();
@@ -1134,38 +1176,41 @@ document.addEventListener("click",function(e){
     case "goteam":closeSheet();go("team");break;
     case "logout":logout();break;
     case "sheet-mypin":sheetMyPin();break;
+    case "eye":{var pi=el.parentNode.querySelector("input");if(pi){pi.type=pi.type==="password"?"text":"password"}break}
+    case "fill":{S.lg.email=el.dataset.e;S.lg.err="";render(true);var lp=$("#l-p");if(lp)lp.value=DEMOPW;break}
+    case "login":{var le=$("#l-e").value.trim(),lw=$("#l-p").value;S.lg.email=le;
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(le)){S.lg.err="Escreva um e-mail válido";render(true);return}
+      if(!lw){S.lg.err="Escreva a palavra-passe";render(true);return}
+      doLogin(le,lw,true).then(function(r){if(r.err){S.lg.err=r.err;haptic("hv");render(true)}});break}
     case "savepin":{var po=$("#p-o").value,pn=$("#p-n").value,pn2=$("#p-n2").value;
-      if(!/^\d{4}$/.test(pn)){toast("O PIN tem 4 números");return}if(pn!==pn2){toast("Os PIN não coincidem");return}
-      hashPin(po,S.me.salt).then(function(h0){if(h0!==S.me.hash){toast("PIN atual incorreto");return}
-        hashPin(pn,S.me.salt).then(function(h1){repoUpdate("users",S.me,{hash:h1});closeSheet();toast("PIN alterado")})});break}
+      if(pn.length<6){toast("A palavra-passe precisa de 6 caracteres");return}if(pn!==pn2){toast("As palavras-passe não coincidem");return}
+      hashPin(po,S.me.salt).then(function(h0){if(h0!==S.me.hash){toast("Palavra-passe atual errada");return}
+        hashPin(pn,S.me.salt).then(function(h1){repoUpdate("users",S.me,{hash:h1});closeSheet();toast("Palavra-passe alterada")})});break}
     case "sheet-user":sheetUser(el.dataset.id?getUser(el.dataset.id):null);break;
-    case "saveuser":{var ucur=el.dataset.id?getUser(el.dataset.id):null,unm=$("#u-nome").value.trim(),upp=$("#u-papel").value,upin=$("#u-pin").value.trim(),uat=$("#u-ativo")?$("#u-ativo").checked:true;
+    case "saveuser":{var ucur=el.dataset.id?getUser(el.dataset.id):null,unm=$("#u-nome").value.trim(),uem=$("#u-mail").value.trim().toLowerCase(),upp=$("#u-papel").value,upin=$("#u-pin").value,uat=$("#u-ativo")?$("#u-ativo").checked:true;
       if(!unm){toast("Escreva o nome");return}
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(uem)){toast("Escreva um e-mail válido");return}
       if(S.users.some(function(x){return (!ucur||x.id!==ucur.id)&&norm(x.nome)===norm(unm)})){toast("Já existe alguém com este nome");return}
-      if((!ucur||upin)&&!/^\d{4}$/.test(upin)){toast("O PIN tem 4 números");return}
+      if(S.users.some(function(x){return (!ucur||x.id!==ucur.id)&&norm(x.email)===uem})){toast("Este e-mail já está em uso");return}
+      if((!ucur||upin)&&upin.length<6){toast("A palavra-passe precisa de 6 caracteres");return}
       var own=S.users.filter(function(x){return x.papel==="proprietario"&&x.ativo!==false&&(!ucur||x.id!==ucur.id)}).length+((upp==="proprietario"&&uat)?1:0);
       if(!own){toast("Tem de haver um proprietário ativo");return}
       if(ucur&&ucur.id===S.me.id&&!uat){toast("Não pode suspender a sua própria conta");return}
       closeSheet();
-      if(ucur){var oldN=ucur.nome,up={nome:unm,papel:upp,ativo:uat};
+      if(ucur){var oldN=ucur.nome,up={nome:unm,email:uem,papel:upp,ativo:uat};
         (upin?hashPin(upin,ucur.salt).then(function(h){up.hash=h}):Promise.resolve()).then(function(){
           repoUpdate("users",ucur,up);
           if(norm(oldN)!==norm(unm))S.os.filter(function(x){return norm(x.mecanico)===norm(oldN)}).forEach(function(x){repoUpdate("os",x,{mecanico:unm})});
           toast("Utilizador guardado")})}
-      else mkUser(unm,upp,upin).then(function(){toast("Utilizador criado")});
+      else mkUser(unm,upp,uem,upin).then(function(){toast("Utilizador criado")});
       break}
     case "askdeluser":{var du=getUser(el.dataset.id);if(du)sheetConfirm("Remover "+esc(du.nome)+"?","Perde o acesso à app. As O.S. dele ficam registadas.","deluser",du.id);break}
     case "deluser":{var du2=getUser(el.dataset.id);if(du2&&S.me&&du2.id!==S.me.id){repoDelete("users",du2);render(true)}closeSheet();toast("Utilizador removido");break}
-    case "setup":{var sn=$("#u-n").value.trim(),sp=$("#u-p").value,sp2=$("#u-p2").value;
-      if(!sn){toast("Escreva o seu nome");return}if(!/^\d{4}$/.test(sp)){toast("O PIN tem 4 números");return}if(sp!==sp2){toast("Os PIN não coincidem");return}
-      mkUser(sn,"proprietario",sp).then(function(u){if(u)loginAs(u)});break}
-    case "demousers":{var dl=[["William","proprietario"],["Marta","gerente"],["Ana","recepcao"],["Stiff","mecanico"],["Jorge","mecanico"]];
-      Promise.all(dl.map(function(d){return mkUser(d[0],d[1],DEMOPIN[d[0]],{demo:true})})).then(function(){render(true);toast("Contas de exemplo criadas")});break}
-    case "pickuser":S.lg={uid:el.dataset.id,pin:""};render(true);break;
-    case "lgback":S.lg={};render(true);break;
-    case "kp":{var Lg=S.lg;if(Lg.lock&&Date.now()<Lg.lock)return;Lg.err="";Lg.shake=false;
-      if(el.dataset.d==="del")Lg.pin=(Lg.pin||"").slice(0,-1);else if((Lg.pin||"").length<4)Lg.pin=(Lg.pin||"")+el.dataset.d;
-      render(true);if((Lg.pin||"").length===4)tryPin();break}
+    case "setup":{var sn=$("#u-n").value.trim(),se=$("#u-e").value.trim().toLowerCase(),sp=$("#u-p").value,sp2=$("#u-p2").value,err="";
+      if(!sn)err="Escreva o seu nome";else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(se))err="Escreva um e-mail válido";else if(sp.length<6)err="A palavra-passe precisa de pelo menos 6 caracteres";else if(sp!==sp2)err="As palavras-passe não coincidem";
+      if(err){S.lg.err=err;render(true);return}
+      mkUser(sn,"proprietario",se,sp).then(function(u){if(u)loginAs(u,true)});break}
+    case "demousers":mkDemo().then(function(){toast("Contas de exemplo criadas")});break;
 
     case "back":back();break;
     case "install":if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice&&deferredPrompt.userChoice.then(function(){deferredPrompt=null;render()})}break;
@@ -1265,9 +1310,9 @@ document.addEventListener("touchend",function(e){if(swx==null)return;var t=e.cha
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!window.claude){navigator.serviceWorker.register("sw.js").catch(function(){})}
 
 document.addEventListener("keydown",function(e){
-  if(S.me||!S.lg.uid||/INPUT|TEXTAREA|SELECT/.test((e.target.tagName||"")))return;
-  if(/^\d$/.test(e.key)){var b=document.querySelector('.kp [data-d="'+e.key+'"]');if(b)b.click()}
-  else if(e.key==="Backspace"){var d=document.querySelector('.kp [data-d="del"]');if(d)d.click()}});
+  if(e.key!=="Enter"||S.me)return;var t=e.target;
+  if(t.id==="l-e"||t.id==="l-p"){e.preventDefault();var b=document.querySelector('[data-act="login"]');if(b)b.click()}
+  else if(/^u-(n|e|p|p2)$/.test(t.id)){e.preventDefault();var c=document.querySelector('[data-act="setup"]');if(c)c.click()}});
 document.addEventListener("visibilitychange",function(){
   if(document.hidden)hiddenAt=Date.now();
   else if(S.me&&hiddenAt&&Date.now()-hiddenAt>10*60*1000)logout(true)});
@@ -1279,9 +1324,6 @@ APP=$("#app");render(true);initData();
 window.__wr={S:S,go:go};
 })();
 </script>
-
-
-
 <!--WR-INTRO-START-->
 <style id="wr-intro-css">
 #intro{--surface:#13161A;--surface2:#1A1E23;--line:#262B32;--ink:#F3F4F6;--ink2:#9CA3AF;--ink3:#6B7280;--bad:#FF6B63;--red:#E31E1E;--grad:linear-gradient(135deg,#F0452A 0%,#E31E1E 45%,#C91212 100%);--chrome:linear-gradient(180deg,#FFFFFF 0%,#C9CDD2 100%);color:#F3F4F6;color-scheme:dark;position:fixed;inset:0;z-index:9999;background:#000;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
@@ -1327,6 +1369,9 @@ window.__wr={S:S,go:go};
 @keyframes wrShake{20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
 #intro .in-skip{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 12px);background:none;border:0;color:#71717a;font:500 12px var(--f-body);padding:8px;cursor:pointer;opacity:0}
 @media (prefers-reduced-motion:reduce){#intro *{animation:none!important}}
+#intro .in-login{overflow-y:auto;-webkit-overflow-scrolling:touch}
+#intro .demohint{margin-top:12px;font-size:12px;color:var(--ink2);text-align:left;border:1px dashed var(--line);border-radius:12px;padding:8px 10px;line-height:1.6}
+#intro .demohint a{color:#7DB2EE;text-decoration:none}#intro .demohint b{color:var(--ink)}
 </style>
 <div id="intro" role="dialog" aria-label="Entrada WR OS">
   <div class="in-bg" id="inBg"></div>
@@ -1339,6 +1384,7 @@ window.__wr={S:S,go:go};
     <form class="in-card" id="inCard" novalidate autocomplete="on">
       <h2 id="inTitle">Bem-vindo de volta</h2>
       <p class="sub" id="inSub">Entra para ver as ordens de serviço de hoje.</p>
+      <div class="fld" id="fName"><label for="inName">Nome</label><div class="inp" id="wName"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><input id="inName" name="name" type="text" autocomplete="name" autocapitalize="words" placeholder="O teu nome"></div></div>
       <div class="fld"><label for="inEmail">Email</label>
         <div class="inp" id="wEmail"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
         <input id="inEmail" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="tu@oficina.co.mz"></div></div>
@@ -1355,6 +1401,7 @@ window.__wr={S:S,go:go};
       </div>
       <button class="go" id="inGo" type="submit">Entrar</button>
       <p class="err" id="inErr" role="alert"></p>
+      <button type="button" class="lnk" id="inDemo" style="display:none;margin:10px auto 0">Explorar com contas de exemplo</button><div class="demohint" id="inHint" style="display:none"></div>
       <div class="foot">WR AUTO BODY · MATOLA</div>
     </form>
   </div>
@@ -1436,14 +1483,14 @@ function toLogin(){
   var s=Math.min(.62,Math.max(.42,(vh*.2)/h));
   var targetC=Math.max(24,sTop+14)+h*s/2+ (vh>700?18:6);
   var ty=targetC-vh/2;
-  var rem0=false;try{rem0=localStorage.getItem("wr_remember")==="1"&&!!localStorage.getItem("wr_user_v1")}catch(e){}
+  var rem0=!!(window.__wrAuth&&__wrAuth.hasSession());
   login.style.top=(targetC+h*s/2+6)+"px";if(!rem0)login.style.visibility="visible";
   var ease="cubic-bezier(.22,1,.36,1)",D=reduce?1:950;
   move.animate([{transform:"translateY(0) scale(1)"},{transform:"translateY("+ty+"px) scale("+s+")"}],{duration:D,easing:ease,fill:"both"});
   if(!rem0)login.animate([{opacity:0,transform:"translateY(34px)"},{opacity:1,transform:"translateY(0)"}],{duration:reduce?1:700,delay:reduce?0:380,easing:ease,fill:"both"});
   $("inBg").animate([{opacity:1},{opacity:.55}],{duration:D,fill:"both"});
   $("inSkip").style.display="none";
-  var remembered=false;try{remembered=localStorage.getItem('wr_remember')==='1'&&!!localStorage.getItem('wr_user_v1')}catch(e){}
+  var remembered=rem0;
   if(remembered){setTimeout(function(){unlock(true)},reduce?0:700);return}
   initLogin();
 }
@@ -1505,16 +1552,15 @@ function unlock(remember){
   o.onfinish=function(){root.remove();document.documentElement.style.overflow=""};
 }
 function initLogin(){
-  if(loginInit)return;loginInit=true;
-  var user=null;try{user=JSON.parse(localStorage.getItem(USER_KEY)||"null")}catch(e){}
-  var mode=user?"enter":"create";
+  if(loginInit)return;if(!window.__wrAuth||!__wrAuth.ready()){setTimeout(initLogin,150);return}loginInit=true;
+  var A=window.__wrAuth;var mode=A.count()?"enter":"create";
   var T=$("inTitle"),Sb=$("inSub"),E=$("inEmail"),P=$("inPass"),P2=$("inPass2"),Err=$("inErr"),Go=$("inGo"),Card=$("inCard");
-  if(user)E.value=user.email;
   function setMode(){
     var c=mode==="create";
     T.textContent=c?"Criar acesso":"Bem-vindo de volta";
     Sb.textContent=c?"Define o email e a palavra-passe para entrar nesta app.":"Entra para ver as ordens de serviço de hoje.";
-    $("fPass2").style.display=c?"":"none";
+    $("fPass2").style.display=c?"":"none";$("fName").style.display=c?"":"none";$("inDemo").style.display=c?"":"none";
+    var dl=A.demoList();$("inHint").style.display=(!c&&dl.length)?"":"none";$("inHint").innerHTML="<b>Contas de exemplo</b> (palavra-passe "+A.pw+")<br>"+dl.map(function(x){return '<a href="#" data-e="'+x.email+'">'+x.email+"</a> · "+x.papel}).join("<br>");
     P.autocomplete=c?"new-password":"current-password";
     Go.textContent=c?"Criar e entrar":"Entrar";
     $("inForgot").style.display=c?"none":"";
@@ -1522,7 +1568,7 @@ function initLogin(){
   }
   function bad(msg,w){
     Err.textContent=msg;Card.classList.remove("shake");void Card.offsetWidth;Card.classList.add("shake");
-    ["wEmail","wPass","wPass2"].forEach(function(i){$(i).classList.remove("bad")});if(w)$(w).classList.add("bad");
+    ["wName","wEmail","wPass","wPass2"].forEach(function(i){$(i).classList.remove("bad")});if(w)$(w).classList.add("bad");
     try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}
   }
   $("inEye").onclick=function(){
@@ -1538,20 +1584,14 @@ function initLogin(){
     var rem=$("inRem").checked;Go.disabled=true;
     if(mode==="create"){
       if(pw!==P2.value){Go.disabled=false;return bad("As palavras-passe não coincidem","wPass2")}
-      hashPw(email,pw).then(function(h){try{localStorage.setItem(USER_KEY,JSON.stringify({email:email,h:h}))}catch(e){}unlock(rem)});
+      var nm=$("inName").value.trim();if(!nm){Go.disabled=false;return bad("Escreve o teu nome","wName")}A.create(nm,email,pw).then(function(u){if(u)unlock(rem);else{Go.disabled=false;bad("Não foi possível criar a conta","wEmail")}});
     }else{
-      hashPw(email,pw).then(function(h){
-        if(user&&email===user.email&&h===user.h)unlock(rem);
-        else{Go.disabled=false;P.value="";bad("Email ou palavra-passe errados","wPass")}
-      });
+      A.login(email,pw,rem).then(function(r){if(r.user)unlock(rem);else{Go.disabled=false;P.value="";bad(r.err||"Email ou palavra-passe errados","wPass")}});
     }
   });
-  $("inForgot").onclick=function(){
-    if(confirm("Repor o acesso? Vais criar um novo email e palavra-passe. Os dados da oficina não são apagados.")){
-      try{localStorage.removeItem(USER_KEY);localStorage.removeItem(REM_KEY)}catch(e){}
-      user=null;mode="create";E.value="";P.value="";P2.value="";setMode();
-    }
-  };
+  $("inForgot").onclick=function(){bad("Peça ao proprietário para redefinir a palavra-passe em Equipa.")};
+  $("inDemo").onclick=function(){A.demo().then(function(){mode="enter";setMode()})};
+  $("inHint").addEventListener("click",function(ev){var a=ev.target.closest("a");if(!a)return;ev.preventDefault();E.value=a.dataset.e;P.value=A.pw});
   setMode();
 }
 /* arranque: espera as imagens (data URI, rápido) e começa */
@@ -1562,6 +1602,9 @@ window.__wrIntro={skip:skip,replay:function(){location.reload()}};
 })();
 </script>
 <!--WR-INTRO-END-->
+
+</body>
+</html>
 
 </body>
 </html>
