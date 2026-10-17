@@ -1,0 +1,13 @@
+{
+  "name": "wr-os",
+  "private": true,
+  "type": "module",
+  "description": "WR OS: envio de avisos push (GitHub Actions)",
+  "scripts": {
+    "test": "node scripts/alertas.test.mjs",
+    "avisos": "node scripts/enviar-avisos.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
