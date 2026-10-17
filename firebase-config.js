@@ -1,10 +1,9 @@
-/* Configuração da nuvem (Firebase) da oficina.
-   Deixe vazio para usar só o aparelho. Cole aqui os valores da consola Firebase (ver LEIA-ME-NUVEM.md). */
+/* Configuração da nuvem (Firebase) da oficina. */
 window.WR_FIREBASE = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyAhV_wn-BdeNnhECuB8V3FEkV-nEj8x42M",
+  authDomain: "wr-oficina.firebaseapp.com",
+  projectId: "wr-oficina",
+  storageBucket: "wr-oficina.firebasestorage.app",
+  messagingSenderId: "795653383079",
+  appId: "1:795653383079:web:db0bc3c0da577de09e0c82"
 };
