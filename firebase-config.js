@@ -9,4 +9,4 @@ window.WR_FIREBASE = {
 };
 
 /* Chave pública VAPID (Firebase > Definições do projeto > Cloud Messaging > Certificados Web Push > Gerar par de chaves). */
-window.WR_VAPID_KEY = "";
+window.WR_VAPID_KEY = "BOCPwpKDilj5sCTg12OlgPC7CVFmLxg_b4soNNrSZP97yKhO0Jot-L9NdwVsCqLWqitEsDPj8aIgjTh9WkywhCk";
