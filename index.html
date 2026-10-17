@@ -303,6 +303,39 @@ textarea.in{min-height:96px;resize:vertical}
 .pwr b{color:var(--ink);font-weight:700;letter-spacing:.12em}
 .bellb{position:relative;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:0 0 auto}
 .bellb i{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-style:normal;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.hi2{font-size:13px;color:var(--ink2);margin-bottom:10px}
+.stcs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stc{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;min-width:0}
+.stc-h{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;color:var(--ink2)}
+.stc-h svg{width:18px;height:18px;opacity:.8}
+.stc b{font-family:var(--f-display);font-style:italic;font-size:28px;line-height:1.1;white-space:nowrap}
+.stc b small{font-size:.5em;font-style:normal;margin-left:3px;opacity:.7}
+.stc small{font-size:12px;color:var(--ink2);line-height:1.3}
+.flow{width:100%;height:auto;display:block}
+.lg{display:flex;justify-content:center;gap:18px;font-size:12.5px;color:var(--ink2);margin-top:6px}
+.lg span{display:flex;align-items:center;gap:6px}
+.lg .ln{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--red)}
+.lg .ln.d{border-top:2px dashed var(--ink2)}
+.pcard{padding:0}
+.prj{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:14px;color:inherit}
+.prj:first-child{border-top:0}
+.prj:hover{background:var(--bg2)}
+.prj-t{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.prj-t .tr{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;min-width:0}
+.prj>small{font-size:12.5px}
+.prj-p{display:flex;align-items:center;gap:10px}
+.prg{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.prg i{display:block;height:100%;background:var(--grad);border-radius:99px}
+.prj-p span{font-size:12px;color:var(--ink2);min-width:34px;text-align:right}
+.prj-f{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}
+.avs{display:flex;align-items:center;gap:6px;min-width:0}
+.avs em{font-style:normal;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av.xs{flex:0 0 24px;width:24px;height:24px;font-size:12px;display:grid;place-items:center;border-radius:50%;background:var(--grad);color:#fff;font-family:var(--f-display);font-style:italic;font-weight:800}
+.act-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.act-l li{display:flex;gap:10px;align-items:flex-start}
+.act-l li button{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;color:inherit;display:flex;flex-direction:column;gap:2px;font-size:13.5px;line-height:1.35}
+.act-l li small{font-size:11.5px}
+@media (min-width:720px){.stcs{grid-template-columns:repeat(4,1fr)}}
 .vb{display:flex;align-items:flex-end;gap:6px;height:130px}
 .vb>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;min-width:0}
 .vb b{font-size:10.5px;color:var(--ink2);font-weight:600;min-height:13px}
@@ -821,23 +854,39 @@ function viewHome(){
   if(S.mode==="loading")return topbar()+skeleton();
   if(!can("os.todas"))return viewHomeMec();
   var r=topbar()+installCard();
-  r+='<section class="sec" style="margin-top:16px"><div class="hero"><div class="hi">'+greet+', '+esc(first(S.me.nome))+' · '+esc(fdate(today()))+'</div><h1>Painel da oficina</h1><div class="kpis">'+
-    '<div class="kpi"><span>Faturado no mês</span><b class="num">'+kmt(fatMes)+'</b></div>'+
-    '<div class="kpi"><span>Viaturas na oficina</span><b class="num">'+abertas.length+'</b></div>'+
-    '<div class="kpi"><span>Orçamentos em aberto</span><b class="num">'+kmt(orcAberto)+'</b></div>'+
-    '<div class="kpi red"><span>Por receber</span><b class="num">'+kmt(porReceber)+'</b></div></div></div></section>';
+  var td=today(),pk=(function(){var d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);return dkey(d).slice(0,7)})();
+  var fatPrev=S.os.filter(function(o){return o.estado==="finalizado"&&dkey(new Date(tsOf(o))).slice(0,7)===pk}).reduce(function(t,o){return t+totalOS(o)},0);
+  var delta=fatPrev>0?Math.round((fatMes-fatPrev)/fatPrev*100):null;
+  var urg=avisos().filter(function(a){return a.k==="prazo"&&a.d<=1}),atr=urg.filter(function(a){return a.d<0}).length,hoje=urg.filter(function(a){return a.d===0}).length,amh=urg.filter(function(a){return a.d===1}).length;
+  var devedores=S.os.filter(function(o){return (o.estado==="finalizado"||o.orcAprovado)&&totalOS(o)-pago(o)>0.009}).length;
+  function stc(l,v,h,i,cls){return '<div class="stc"><div class="stc-h"><span>'+l+'</span>'+ic(i)+'</div><b class="num '+(cls||"")+'">'+v+'</b><small>'+h+'</small></div>'}
+  r+='<section class="sec" style="margin-top:16px"><div class="hi2">'+greet+', '+esc(first(S.me.nome))+' · '+esc(fdate(today()))+'</div><div class="stcs">'+
+    stc("Viaturas na oficina",abertas.length,(cnt.pendente||0)+" pendentes · "+(cnt.andamento||0)+" em andamento","car")+
+    stc("Prazos urgentes",urg.length,atr+" atrasadas · "+hoje+" hoje · "+amh+" amanhã","bell",atr?"low":"")+
+    stc("Faturado no mês",kmt(fatMes),delta==null?"Sem mês anterior para comparar":(delta>=0?"▲ ":"▼ ")+Math.abs(delta)+"% face ao mês anterior","doc")+
+    stc("Por receber",kmt(porReceber),devedores+(devedores===1?" cliente por pagar":" clientes por pagar"),"alert",porReceber?"low":"")+'</div></section>';
   r+=avisosSec();
+  /* fluxo de O.S. (8 semanas) */
+  var W8=[],k8;for(k8=7;k8>=0;k8--){var e=new Date();e.setHours(23,59,59,999);e.setDate(e.getDate()-k8*7);var st0=new Date(e.getTime());st0.setHours(0,0,0,0);st0.setDate(st0.getDate()-6);W8.push({a:st0.getTime(),b:e.getTime(),l:st0.getDate()+" "+MES[st0.getMonth()],op:0,fi:0})}
+  S.os.forEach(function(o){var to=o.criado||Date.parse((o.data||td)+"T12:00:00")||0,tf=o.estado==="finalizado"?tsOf(o):0;W8.forEach(function(w){if(to>=w.a&&to<=w.b)w.op++;if(tf&&tf>=w.a&&tf<=w.b)w.fi++})});
+  r+='<section class="sec">'+hdr("Fluxo de O.S.","Abertas e finalizadas nas últimas 8 semanas")+'<div class="card">'+flowChart(W8)+'</div></section>';
+  /* em curso + atividade */
+  var emc=abertas.slice().sort(function(a,b){var pa=a.prazo||"9999",pb=b.prazo||"9999";return pa<pb?-1:pa>pb?1:(b.atualizado||0)-(a.atualizado||0)}).slice(0,5);
+  var ec='';
+  if(!emc.length)ec='<div class="empty">'+ic("gear")+'<b>Nenhuma viatura em curso</b>Crie a primeira ordem de serviço com o botão Nova.</div>';
+  else ec='<div class="card pcard">'+emc.map(function(o){
+    var p=fichaProg(o),pz=prazoInfo(o),sv=(o.servicos||[]).slice(0,3).join(" · ");
+    return '<button class="prj" data-act="open" data-id="'+esc(o.id)+'"><div class="prj-t"><b class="tr">'+esc(o.matricula||"—")+' · '+esc(o.cliente||"Sem nome")+'</b>'+pill(o.estado)+'</div>'+
+      '<small class="muted">'+esc(sv||veic(o))+'</small>'+
+      '<div class="prj-p"><div class="prg"><i style="width:'+p.p+'%"></i></div><span class="num">'+p.p+'%</span></div>'+
+      '<div class="prj-f"><span class="avs"><i class="av xs">'+esc(ini(o.mecanico||"?"))+'</i><em>'+esc(o.mecanico||"Sem mecânico")+'</em></span><span class="'+(pz&&pz.late?"late":"muted")+'">'+(pz?esc(pz.txt):"Sem prazo")+'</span></div></button>'}).join("")+'</div>';
+  r+='<section class="sec half">'+hdr("Viaturas em curso","Progresso e prazo de entrega",'<button class="btn sm" data-act="tab" data-v="list">Ver todas</button>')+ec+'</section>';
+  r+='<section class="sec half">'+hdr("Atividade recente","Últimas novidades da oficina")+'<div class="card">'+activityHtml()+'</div></section>';
   r+='<section class="sec half">'+hdr("Estado das O.S.")+'<div class="stats">'+STATUS.map(function(s){return '<button class="stat st-'+s.k+'" data-act="filter" data-k="'+s.k+'"><b class="num">'+cnt[s.k]+'</b><span>'+s.l+'</span></button>'}).join("")+'</div></section>';
   r+='<section class="sec half">'+hdr("Faturação","últimos 7 dias",can("relatorios")?'<button class="btn sm" data-act="tab" data-v="rel">Painel do dono</button>':'')+'<div class="card"><div class="bars">'+days.map(function(x){
     var hh=Math.round(x.v/max*100);return '<div class="bar"><u>'+(x.v?short(x.v):"")+'</u><i class="'+(x.v?"":"z")+'" style="height:'+(x.v?Math.max(hh,6):3)+'%"></i><em>'+x.l+'</em></div>'}).join("")+'</div></div></section>';
-  var ent=S.os.filter(function(o){return o.prazo&&o.estado!=="finalizado"&&canSee(o)}).sort(function(a,b){return a.prazo<b.prazo?-1:1}).slice(0,6);
-  if(ent.length)r+='<section class="sec">'+hdr("Prazos de entrega",ent.length+" em curso")+'<div class="list">'+ent.map(osCard).join("")+'</div></section>';
   if(lem.length)r+='<section class="sec">'+hdr("Lembretes",lem.length+" por fazer")+'<div class="list">'+lem.map(function(o){var l=o.lembrete;
     return '<div class="card"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div style="min-width:0"><b>'+esc(l.texto||"Lembrete")+'</b><div class="muted" style="font-size:13px;margin-top:2px">'+esc(o.cliente||"")+' · <span class="plate sm">'+esc(o.matricula||"")+'</span> · '+esc(fdate(l.quando))+(l.quando.length>10?" "+esc(l.quando.slice(11,16)):"")+'</div></div><button class="btn sm" data-act="lemdone" data-id="'+esc(o.id)+'">Feito</button></div></div>'}).join("")+'</div></section>';
-  r+='<section class="sec">'+hdr("Em curso","mais recentes primeiro",'<button class="btn sm" data-act="tab" data-v="list">Ver todas</button>');
-  if(!abertas.length)r+='<div class="empty">'+ic("gear")+'<b>Nenhuma viatura em curso</b>Crie a primeira ordem de serviço com o botão Nova O.S.</div>';
-  else r+='<div class="list">'+abertas.slice(0,5).map(osCard).join("")+'</div>';
-  r+='</section>';
   if(can("equipa")&&(S.os.some(function(x){return x.demo})||S.estoque.some(function(x){return x.demo})||S.users.some(function(x){return x.demo})))r+='<section class="sec"><button class="btn block" data-act="askclear">Limpar dados de exemplo</button></section>';
   return r;
 }
@@ -1189,6 +1238,29 @@ function checkPrazos(force){
     if(nw.length>3){showN("WR Oficina · Prazos",nw.length+" viaturas precisam de atenção hoje. Abra a app para ver.","prazos-"+td);return}
     nw.forEach(function(a){showN(a.d<0?"Entrega atrasada":a.k==="lem"?"Lembrete":a.d===0?"Entrega hoje":"Entrega amanhã",(a.o.matricula||"—")+" · "+(a.o.cliente||"Sem nome")+" — "+a.txt,td+"|"+a.o.id+"|"+a.kind)})
   }catch(e){}}
+
+
+function relT(t){var m=Math.max(0,Math.round((Date.now()-t)/60000));if(m<1)return "agora";if(m<60)return "há "+m+" min";var h=Math.round(m/60);if(h<24)return "há "+h+" h";var d=Math.round(h/24);if(d<7)return "há "+d+(d===1?" dia":" dias");return sdate(dkey(new Date(t)))}
+function activityHtml(){
+  var ev=[],FK={anomalia:"uma anomalia",reparo:"um reparo",peca:"uma peça",repor:"uma peça a repor"};
+  S.os.forEach(function(o){
+    var pl=(o.matricula||"—");
+    var tc=o.criado||Date.parse((o.data||"")+"T12:00:00");if(tc)ev.push({t:tc,who:"Oficina",a:"abriu uma O.S. para "+(o.cliente||"cliente"),o:pl,id:o.id});
+    if(o.estado==="finalizado"){var tf=tsOf(o);if(tf)ev.push({t:tf,who:"Oficina",a:"concluiu a O.S. de "+(o.cliente||"cliente"),o:pl,id:o.id})}
+    (o.pagamentos||[]).forEach(function(p){if(p.t)ev.push({t:p.t,who:"Caixa",a:"registou um pagamento de "+mt(p.valor),o:pl,id:o.id})});
+    fichaOf(o).forEach(function(x){if(typeof x.t==="number"&&x.por)ev.push({t:x.t,who:x.por,a:"registou "+(FK[x.k]||"um item")+": "+x.txt,o:pl,id:o.id})})});
+  ev=ev.filter(function(e){return e.t&&e.t<=Date.now()+6e4}).sort(function(a,b){return b.t-a.t}).slice(0,7);
+  if(!ev.length)return '<div class="muted">Ainda sem atividade.</div>';
+  return '<ol class="act-l">'+ev.map(function(e){return '<li><i class="av xs">'+esc(ini(e.who))+'</i><button data-act="open" data-id="'+esc(e.id)+'"><span><b>'+esc(e.who)+'</b> <span class="muted">'+esc(e.a)+'</span> · <span class="plate sm">'+esc(e.o)+'</span></span><small class="muted">'+relT(e.t)+'</small></button></li>'}).join("")+'</ol>'}
+function flowChart(W){
+  var w=window.innerWidth>=1024?1000:window.innerWidth>=720?820:420,h=Math.round(w*(w>=1000?0.25:w>=800?0.3:0.6)),L=30,R=20,T=10,B=26,mx=Math.max.apply(null,W.map(function(x){return Math.max(x.op,x.fi)}));mx=Math.max(4,Math.ceil(mx/2)*2);
+  var X=function(i){return L+i*(w-L-R)/(W.length-1)},Y=function(v){return T+(h-T-B)*(1-v/mx)};
+  function path(key){var p=W.map(function(x,i){return [X(i),Y(x[key])]}),d="M"+p[0][0]+" "+p[0][1],i;for(i=0;i<p.length-1;i++){var a=p[i],b=p[i+1],cx=(a[0]+b[0])/2;d+=" C"+cx+" "+a[1]+" "+cx+" "+b[1]+" "+b[0]+" "+b[1]}return d}
+  var grid="",g;for(g=0;g<=4;g++){var v=mx*g/4,y=Y(v);grid+='<line x1="'+L+'" x2="'+(w-R)+'" y1="'+y+'" y2="'+y+'" stroke="var(--line)" stroke-dasharray="3 3"/><text x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="var(--ink2)">'+Math.round(v)+'</text>'}
+  var xl=W.map(function(x,i){return '<text x="'+X(i)+'" y="'+(h-6)+'" text-anchor="middle" font-size="11" fill="var(--ink2)">'+esc(x.l)+'</text>'}).join("");
+  var pts=W.map(function(x,i){return '<circle cx="'+X(i)+'" cy="'+Y(x.fi)+'" r="3.5" fill="var(--red)"><title>'+esc(x.l)+': '+x.fi+' finalizadas</title></circle><circle cx="'+X(i)+'" cy="'+Y(x.op)+'" r="3" fill="var(--surface)" stroke="var(--ink2)" stroke-width="1.5"><title>'+esc(x.l)+': '+x.op+' abertas</title></circle>'}).join("");
+  var area=path("fi")+" L"+X(W.length-1)+" "+Y(0)+" L"+X(0)+" "+Y(0)+" Z";
+  return '<svg class="flow" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Gráfico de O.S. abertas e finalizadas por semana"><defs><linearGradient id="flowg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--red)" stop-opacity=".28"/><stop offset="100%" stop-color="var(--red)" stop-opacity=".02"/></linearGradient></defs>'+grid+'<path d="'+area+'" fill="url(#flowg)"/><path d="'+path("op")+'" fill="none" stroke="var(--ink2)" stroke-width="2" stroke-dasharray="5 4"/><path d="'+path("fi")+'" fill="none" stroke="var(--red)" stroke-width="2.4"/>'+pts+xl+'</svg><div class="lg"><span><i class="ln"></i>Finalizadas</span><span><i class="ln d"></i>Abertas</span></div>'}
 
 function viewReports(){
   var days=S.period==="tudo"?99999:+S.period,lim=Date.now()-days*864e5;
