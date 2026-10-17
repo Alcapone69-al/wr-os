@@ -299,6 +299,8 @@ textarea.in{min-height:96px;resize:vertical}
 .qty button{border:0;background:var(--surface2);width:38px;height:36px;font-size:18px;font-weight:700}
 .qty span{min-width:38px;text-align:center;font-weight:700}
 .low{color:var(--bad)}
+.pwr{text-align:center;font-size:11.5px;letter-spacing:.08em;color:var(--ink2);padding:18px 0 6px;opacity:.85}
+.pwr b{color:var(--ink);font-weight:700;letter-spacing:.12em}
 .vb{display:flex;align-items:flex-end;gap:6px;height:130px}
 .vb>div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;min-width:0}
 .vb b{font-size:10.5px;color:var(--ink2);font-weight:600;min-height:13px}
@@ -1310,6 +1312,7 @@ function render(force){
   if(VIEW_PERM[S.view]&&!can(VIEW_PERM[S.view]))S.view="home";
   var sy=window.scrollY,V=S.view;
   APP.innerHTML=V==="home"?viewHome():V==="list"?viewList():V==="new"?viewNew():V==="edit"?viewEdit():V==="clients"?viewClients():V==="stock"?viewStock():V==="rel"?viewDash():V==="team"?viewTeam():viewDetail();
+  APP.innerHTML+='<div class="pwr">Powered by <b>YFX</b></div>';
   var cur=V==="home"||V==="rel"||V==="team"?"home":V==="new"?"new":V==="clients"?"clients":V==="stock"?"stock":"list";
   function tab(v,i,l){return '<button class="tab" data-act="tab" data-v="'+v+'" aria-current="'+(cur===v?"page":"false")+'">'+ic(i)+'<span>'+l+'</span></button>'}
   var tb=tab("home","home","Painel")+tab("list","list",can("os.todas")?"O.S.":"Obras");
@@ -1604,7 +1607,7 @@ window.__wr={S:S,go:go};
       <button class="go" id="inGo" type="submit">Entrar</button>
       <p class="err" id="inErr" role="alert"></p>
       <button type="button" class="lnk" id="inDemo" style="display:none;margin:10px auto 0">Explorar com contas de exemplo</button><div class="demohint" id="inHint" style="display:none"></div>
-      <div class="foot">WR AUTO BODY · MATOLA</div>
+      <div class="foot">WR AUTO BODY · MATOLA<br><span style="letter-spacing:.1em">Powered by <b style="color:#F3F4F6">YFX</b></span></div>
     </form>
   </div>
   <button class="in-skip" id="inSkip" type="button" aria-label="Saltar animação">Saltar</button>
