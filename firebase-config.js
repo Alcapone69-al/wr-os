@@ -7,3 +7,6 @@ window.WR_FIREBASE = {
   messagingSenderId: "795653383079",
   appId: "1:795653383079:web:db0bc3c0da577de09e0c82"
 };
+
+/* Chave pública VAPID (Firebase > Definições do projeto > Cloud Messaging > Certificados Web Push > Gerar par de chaves). */
+window.WR_VAPID_KEY = "";

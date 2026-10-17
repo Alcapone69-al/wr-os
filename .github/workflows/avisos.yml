@@ -1,0 +1,33 @@
+name: Avisos push
+
+on:
+  schedule:
+    # De hora a hora, das 07h às 18h em Maputo (05h–16h UTC). O GitHub pode atrasar alguns minutos.
+    - cron: "5 5-16 * * *"
+  workflow_dispatch:
+    inputs:
+      forcar:
+        description: "Ignorar o horário (1 = sim)"
+        required: false
+        default: "0"
+
+concurrency:
+  group: avisos
+  cancel-in-progress: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node scripts/enviar-avisos.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FORCAR: ${{ github.event.inputs.forcar }}
