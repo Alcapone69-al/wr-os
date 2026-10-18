@@ -1249,7 +1249,7 @@ function avisosSec(){
   return '<section class="sec">'+hdr("Avisos de prazo",A.length+(A.length===1?" a precisar de atenção":" a precisar de atenção"))+'<div class="card" style="'+(late?"border-color:var(--bad)":"")+'">'+A.slice(0,8).map(avisoRow).join("")+(A.length>8?'<div class="muted" style="font-size:12.5px;padding-top:8px">+'+(A.length-8)+' no sino</div>':'')+(notifState()==="default"?'<div style="padding-top:10px"><button class="btn sm" data-act="notifon">'+ic("bell")+'Ativar notificações de prazos</button></div>':'')+'</div></section>'}
 function sheetAvisos(){
   var A=avisos(),st=notifState(),nb;
-  nb=st==="granted"?'<p class="muted" style="font-size:13px">Notificações de prazo ativas neste aparelho.</p>':st==="denied"?'<p class="muted" style="font-size:13px">As notificações estão bloqueadas. Ative-as nas definições do browser para este site.</p>':st==="unsupported"?'<p class="muted" style="font-size:13px">Este aparelho não suporta notificações.</p>':'<button class="btn pri block" data-act="notifon">Ativar notificações de prazos</button>';
+  nb=st==="granted"?('<p class="muted" style="font-size:13px">Notificações de prazo ativas neste aparelho.</p>'+(pushOn()?'':'<button class="btn pri block" style="margin-top:8px" data-act="pushon">Ativar avisos com a app fechada</button>')):st==="denied"?'<p class="muted" style="font-size:13px">As notificações estão bloqueadas. Ative-as nas definições do browser para este site.</p>':st==="unsupported"?'<p class="muted" style="font-size:13px">Este aparelho não suporta notificações.</p>':'<button class="btn pri block" data-act="notifon">Ativar notificações de prazos</button>';
   sheet('<h3>Avisos de prazo</h3><p class="muted" style="margin:2px 0 12px">Entregas atrasadas, de hoje, de amanhã e dos próximos 3 dias.</p>'+(A.length?'<div class="card">'+A.map(avisoRow).join("")+'</div>':'<div class="empty">'+ic("check")+'<b>Sem prazos a vencer</b>Nenhuma entrega atrasada ou nos próximos 3 dias.</div>')+'<div style="margin-top:14px">'+nb+''+pushNote()+'</div><button class="btn block" style="margin-top:10px" data-act="closesheet">Fechar</button>')}
 function showN(t,b,tag){
   var opt={body:b,tag:tag,icon:"icon-192.png",badge:"icon-192.png"};
@@ -1605,7 +1605,8 @@ function comprarHtml(){
 /* ===== push com a app fechada (Firebase Cloud Messaging) ===== */
 function pushOn(){return lsGet("wr_push",false)===true}
 function pushNote(){
-  var t=pushOn()?"Push ativo neste aparelho: os avisos chegam mesmo com a app fechada (das 07h às 18h).":"Os avisos chegam enquanto a app estiver aberta ou em segundo plano.";
+  var er=lsGet("wr_push_err","");
+  var t=pushOn()?"Push ativo neste aparelho: os avisos chegam mesmo com a app fechada (das 07h às 18h).":("Os avisos chegam enquanto a app estiver aberta ou em segundo plano."+(er?" Última falha do push: "+er:""));
   return '<p class="muted" style="font-size:12px;margin-top:8px">'+t+'</p>';
 }
 function shaHex(t){
@@ -1616,18 +1617,20 @@ async function pushEnable(silent){
   try{
     if(!db||!window.firebase){if(!silent)toast("O push precisa da nuvem ligada");return}
     if(!window.WR_VAPID_KEY){if(!silent)toast("Falta a chave VAPID em firebase-config.js");return}
-    if(!("serviceWorker" in navigator)||notifState()!=="granted")return;
+    if(!("serviceWorker" in navigator)){if(!silent)toast("Este browser não suporta push");return}
+    if(notifState()!=="granted"){if(!silent)toast("Permita primeiro as notificações");return}
     var reg=await navigator.serviceWorker.ready;
     if(!firebase.messaging)await loadJs("vendor/firebase-messaging-compat.js");
-    if(firebase.messaging.isSupported&&!firebase.messaging.isSupported()){if(!silent)toast("Este aparelho não suporta push");return}
+    if(firebase.messaging.isSupported){var sup=await firebase.messaging.isSupported();if(sup===false){if(!silent)toast(isIOS()?"No iPhone, instale a app no ecrã inicial primeiro":"Este aparelho não suporta push");return}}
     var token=await firebase.messaging().getToken({vapidKey:window.WR_VAPID_KEY,serviceWorkerRegistration:reg});
     if(!token)throw new Error("sem token");
     var id=await shaHex(token),first=lsGet("wr_push_t",0)||Date.now();
     await db.doc("dispositivos/"+id).set({token:token,ua:String(navigator.userAgent).slice(0,140),criado:first,atualizado:Date.now()},{merge:true});
-    lsSet("wr_push_t",first);lsSet("wr_push",true);
+    lsSet("wr_push_t",first);lsSet("wr_push",true);lsSet("wr_push_err","");
     if(!silent)toast("Push ativado: avisos mesmo com a app fechada");
     render();
-  }catch(e){console.warn("push",e);if(!silent)toast("Não foi possível ativar o push neste aparelho")}
+  }catch(e){console.warn("push",e);lsSet("wr_push_err",String((e&&(e.code||e.message))||e).slice(0,120));
+    if(!silent)toast("Push falhou: "+String((e&&(e.code||e.message))||e).slice(0,70))}
 }
 
 /* ===== render ===== */
@@ -1790,6 +1793,7 @@ document.addEventListener("click",function(e){
     case "exp-pag":expPag();break;
     case "exp-stk":expStk();break;
     case "backup":backupAll();break;
+    case "pushon":pushEnable();break;
     case "sheet-filial":{var fo=[{id:"todas",nome:"Todas as oficinas"}].concat(FILIAIS);
       sheet('<h3>Oficina</h3><p class="muted" style="margin:2px 0 12px">Escolha que oficina quer ver. Os painéis, listas, estoque e avisos mostram só essa oficina.</p>'+fo.map(function(f){return '<button class="btn'+(S.filial===f.id?" pri":"")+'" style="width:100%;margin-bottom:8px" data-act="setfilial" data-k="'+f.id+'">'+esc(f.nome)+'</button>'}).join("")+'<button class="btn" style="width:100%" data-act="closesheet">Fechar</button>');break}
     case "setfilial":{S.filial=el.dataset.k;lsSet("wr_filial",S.filial);applyF();closeSheet();if(S.view==="detail"||S.view==="edit"){S.view="home";S.id=null}render(true);toast(S.filial==="todas"?"A ver todas as oficinas":"Oficina: "+OF().filial);break}
