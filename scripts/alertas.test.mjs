@@ -33,5 +33,7 @@ const dois = computeAlerts(os.slice(0, 2), now);
 r = buildMessages(dois, new Set(), now);
 assert.equal(r.msgs.length, 2);
 assert.equal(r.msgs[0].tag, "2026-10-17|a|late");
-assert.match(r.msgs[0].body, /AAA · Ana — Atrasada 2 dia/);
+assert.match(r.msgs[0].body, /AAA · Ana \(Samora Machel\) — Atrasada 2 dia/);
+const moz = computeAlerts([{ id: "m", estado: "pendente", prazo: "2026-10-17", filial: "mozal", matricula: "MMM", cliente: "Mo" }], now);
+assert.match(buildMessages(moz, new Set(), now).msgs[0].body, /\(Mozal\)/);
 console.log("alertas.test.mjs OK");
