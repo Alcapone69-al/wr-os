@@ -16,7 +16,7 @@ Avisa: entrega atrasada / hoje / amanhã, lembretes vencidos, viatura pronta há
 
 1. **Chave VAPID**: Firebase Console → Definições do projeto → *Cloud Messaging* → *Certificados Web Push* → *Gerar par de chaves*. Copie a chave pública para `window.WR_VAPID_KEY` em `firebase-config.js`.
 2. **Conta de serviço**: Firebase Console → Definições do projeto → *Contas de serviço* → *Gerar nova chave privada*. No GitHub: *Settings → Secrets and variables → Actions → New repository secret*, nome `FIREBASE_SERVICE_ACCOUNT`, valor = o conteúdo completo do ficheiro JSON. **Nunca** coloque este ficheiro no repositório.
-3. **Regras da base de dados**: Firebase Console → Firestore → *Regras*: cole o conteúdo de `firestore.rules` e publique.
+3. **Regras da base de dados**: já publicadas no projeto (só a conta da oficina lê e escreve). O ficheiro `firestore.rules` neste repositório é uma cópia do que está em produção, para referência — não é preciso colar nada.
 4. **API Cloud Messaging**: se pedido, ative a *Firebase Cloud Messaging API* no Google Cloud do projeto.
 5. **Em cada aparelho** (tablet, PC do escritório): abra a app, entre, toque no sino → *Ativar notificações* e aceite. No iPhone/iPad: primeiro *Partilhar → Adicionar ao ecrã inicial* (iOS 16.4+), abra a app instalada e só depois ative.
 
