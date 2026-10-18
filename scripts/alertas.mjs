@@ -2,6 +2,8 @@
 const TZ_MS = 2 * 3600 * 1000;
 const DIA = 864e5;
 
+export const FILIAIS = { samora: "Samora Machel", mozal: "Mozal" };
+export function nomeFilial(o) { return FILIAIS[o.filial] || FILIAIS.samora; }
 export function diaLocal(now) { return new Date(now + TZ_MS).toISOString().slice(0, 10); }
 export function horaLocal(now) { return new Date(now + TZ_MS).getUTCHours(); }
 function diasEntre(a, b) { return Math.round((Date.parse(a + "T00:00:00Z") - Date.parse(b + "T00:00:00Z")) / DIA); }
@@ -44,7 +46,7 @@ export function buildMessages(alerts, jaEnviados, now = Date.now()) {
   if (novos.length > 3)
     return { msgs: [{ title: "WR Oficina · Avisos", body: `${novos.length} viaturas precisam de atenção hoje. Abra a app para ver.`, tag: "prazos-" + td, url: "./" }], keys };
   return {
-    msgs: novos.map((a) => ({ title: a.title, body: `${a.o.matricula || "—"} · ${a.o.cliente || "Sem nome"} — ${a.txt}`, tag: `${td}|${a.id}|${a.kind === "late" ? "late" : a.kind}`, url: "./" })),
+    msgs: novos.map((a) => ({ title: a.title, body: `${a.o.matricula || "—"} · ${a.o.cliente || "Sem nome"} (${nomeFilial(a.o)}) — ${a.txt}`, tag: `${td}|${a.id}|${a.kind === "late" ? "late" : a.kind}`, url: "./" })),
     keys,
   };
 }
