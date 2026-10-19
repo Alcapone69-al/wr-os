@@ -18,8 +18,8 @@ O estoque tem dois separadores: **Peças** e **Material de pintura** (tinta, ver
 
 Além da conta do dono (`wrautobodyapp@gmail.com`, vê tudo), há utilizadores da função **Oficina**: cada um vê só as viaturas e os serviços de UMA oficina (Samora Machel ou Mozal), sem valores, clientes nem relatórios.
 
-1. Entre com a conta do dono › toque na letra do canto › **Utilizadores das oficinas** › **+ Utilizador** (nome, e-mail, oficina).
-2. No Firebase Console › Authentication › Users › **Add user**, crie a conta com o mesmo e-mail e uma palavra-passe.
+1. Entre com a conta do dono › toque na letra do canto › **Utilizadores das oficinas** › **+ Utilizador** (nome, utilizador, por exemplo `mozal` ou `n4`, e oficina).
+2. No Firebase Console › Authentication › Users › **Add user**, crie a conta com o e-mail `utilizador@wr-oficina.mz` (por exemplo `mozal@wr-oficina.mz`) e uma palavra-passe. Esse e-mail é só um nome interno: não precisa de existir. O supervisor entra na app escrevendo apenas o utilizador (`mozal`) e a palavra-passe.
 3. Publique as regras de `firestore.rules` (Firestore › Regras). Sem elas, a restrição por oficina só existe na interface.
 
 Quem não está na lista (e não é o dono) não entra. Para suspender, desmarque "Acesso ativo". As regras limitam cada utilizador à sua oficina também no servidor (O.S., estoque e fotos). Os registos antigos sem oficina recebem `samora` automaticamente quando o dono abre a app.

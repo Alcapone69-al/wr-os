@@ -1422,15 +1422,15 @@ function viewLogin(){
     '<div class="lerr'+(L.err?" bad":"")+'" role="alert">'+esc(L.err||"")+'</div><button class="btn pri block" data-act="setup">Criar conta do proprietário</button></div>'+
     '<button class="btn block" data-act="demousers">Explorar com contas de exemplo</button></div>';
   var o2=["proprietario","gerente","recepcao","mecanico"],dm=S.users.filter(function(x){return x.demo&&DEMO[x.nome]}).sort(function(x,y){return o2.indexOf(x.papel)-o2.indexOf(y.papel)||String(x.nome).localeCompare(String(y.nome))});
-  return '<div class="login">'+logo+'<h1>Entrar</h1><p class="muted">Entre com o seu e-mail e palavra-passe.</p>'+
-    '<div class="card"><div class="field"><label for="l-e">E-mail</label><input class="in" id="l-e" type="email" inputmode="email" autocapitalize="off" autocomplete="username" spellcheck="false" enterkeyhint="next" value="'+esc(L.email||"")+'"></div>'+
+  return '<div class="login">'+logo+'<h1>Entrar</h1><p class="muted">Entre com o seu utilizador e palavra-passe.</p>'+
+    '<div class="card"><div class="field"><label for="l-e">Utilizador ou e-mail</label><input class="in" id="l-e" type="text" inputmode="email" autocapitalize="off" autocomplete="username" spellcheck="false" enterkeyhint="next" value="'+esc(L.email||"")+'"></div>'+
     '<div class="field"><label for="l-p">Palavra-passe</label><div style="position:relative"><input class="in" id="l-p" type="password" autocomplete="current-password" enterkeyhint="go">'+eye+'</div></div>'+
     '<div class="lerr'+(L.err?" bad":"")+'" role="alert">'+esc(L.err||"")+'</div><button class="btn pri block" data-act="login">Entrar</button>'+
     '<p class="muted" style="font-size:12.5px;margin-top:10px;text-align:center">'+(fbCfg()?"Conta única da oficina, partilhada pelo tablet e pelo computador.":"Esqueceu a palavra-passe? Peça ao proprietário para a redefinir em Equipa.")+'</p></div>'+
     (dm.length?'<div class="demo-hint"><b>Contas de exemplo</b> (palavra-passe '+DEMOPW+')<br>'+dm.map(function(x){return '<button data-act="fill" data-e="'+esc(x.email)+'" style="background:none;border:0;padding:2px 0;color:var(--focus);text-align:left">'+esc(x.email)+'</button> · '+esc(ROLES[x.papel])}).join("<br>")+'</div>':'')+'</div>';
 }
 function doLogin(email,pw,rem){
-  if(window.__fbAuth)return window.__fbAuth.signInWithEmailAndPassword(String(email||"").trim(),pw).then(function(){return {user:FBU}},function(e){var c=(e&&e.code)||"";return {err:/network/.test(c)?"Sem ligação à internet":/too-many/.test(c)?"Muitas tentativas. Aguarde uns minutos":"E-mail ou palavra-passe errados"}});
+  if(window.__fbAuth)return window.__fbAuth.signInWithEmailAndPassword(toEmail(email),pw).then(function(){return {user:FBU}},function(e){var c=(e&&e.code)||"";return {err:/network/.test(c)?"Sem ligação à internet":/too-many/.test(c)?"Muitas tentativas. Aguarde uns minutos":"E-mail ou palavra-passe errados"}});
   var now=Date.now();
   if(S.lock&&now<S.lock)return Promise.resolve({err:"Muitas tentativas. Aguarde "+Math.ceil((S.lock-now)/1000)+" segundos"});
   var u=S.users.filter(function(x){return norm(x.email)===norm(email)&&x.ativo!==false})[0];
@@ -1448,17 +1448,20 @@ function viewTeamCloud(){
   var A=(S.acessos||[]).slice().sort(function(a,b){return String(a.nome).localeCompare(String(b.nome))});
   var r=topbar()+'<section class="sec" style="margin-top:12px"><button class="back" data-act="back">'+ic("back")+'Voltar</button>'+hdr("Utilizadores das oficinas",A.length+" utilizador(es)",'<button class="btn sm pri" data-act="sheet-acesso">+ Utilizador</button>')+'<div class="list">';
   r+=A.length?A.map(function(a){var f=FILIAIS.filter(function(x){return x.id===a.filial})[0];
-    return '<button class="rowc" data-act="sheet-acesso" data-id="'+esc(a.id)+'"'+(a.ativo===false?' style="opacity:.55"':'')+'><span class="av">'+esc(ini(a.nome))+'</span><span class="bd"><b>'+esc(a.nome)+'</b><span>'+esc(a.id)+(a.ativo===false?" · acesso suspenso":"")+'</span></span><span class="role r-oficina">'+esc(f?f.nome:"Sem oficina")+'</span></button>'}).join(""):
+    return '<button class="rowc" data-act="sheet-acesso" data-id="'+esc(a.id)+'"'+(a.ativo===false?' style="opacity:.55"':'')+'><span class="av">'+esc(ini(a.nome))+'</span><span class="bd"><b>'+esc(a.nome)+'</b><span>'+esc(userName(a.id))+(a.ativo===false?" · acesso suspenso":"")+'</span></span><span class="role r-oficina">'+esc(f?f.nome:"Sem oficina")+'</span></button>'}).join(""):
     '<div class="empty">'+ic("users")+'<b>Ainda sem utilizadores</b>Crie um utilizador para cada oficina. Cada um só vê as viaturas e os serviços da sua oficina.</div>';
   r+='</div></section><section class="sec">'+hdr("Como funciona")+'<div class="card perm"><div><span class="role r-oficina">Oficina</span>'+esc(ROLEDESC.oficina)+'</div>'+
-   '<div class="muted" style="font-size:13px;margin-top:10px">Para criar um utilizador: 1) toque em <b>+ Utilizador</b>, escreva o nome, o e-mail e escolha a oficina; 2) no Firebase (Authentication › Users › Add user) crie a conta com o <b>mesmo e-mail</b> e uma palavra-passe, e entregue-a à pessoa. Para suspender o acesso, abra o utilizador e desmarque "Acesso ativo".</div></div></section>';
+   '<div class="muted" style="font-size:13px;margin-top:10px">Para criar um utilizador: 1) toque em <b>+ Utilizador</b>, escreva o nome, o utilizador (ex.: mozal) e escolha a oficina; 2) no Firebase (Authentication › Users › Add user) crie a conta com o e-mail <b>utilizador'+UDOM+'</b> e uma palavra-passe, e entregue ao supervisor o utilizador e a palavra-passe. Para suspender o acesso, abra o utilizador e desmarque "Acesso ativo".</div></div></section>';
   return r;
 }
+var UDOM="@wr-oficina.mz";
+function toEmail(v){v=String(v||"").trim().toLowerCase();if(!v)return "";if(v.indexOf("@")>-1)return v;v=v.replace(/\s+/g,"").replace(/[^a-z0-9._-]/g,"");return v?v+UDOM:""}
+function userName(e){e=String(e||"");return e.slice(-UDOM.length)===UDOM?e.slice(0,-UDOM.length):e}
 function sheetAcesso(a){
   a=a||{};
   sheet('<h3>'+(a.id?"Editar utilizador":"Novo utilizador")+'</h3>'+
    '<div class="field"><label for="a-nome">Nome</label><input class="in" id="a-nome" autocapitalize="words" autocomplete="off" value="'+esc(a.nome)+'"></div>'+
-   '<div class="field"><label for="a-mail">E-mail (o mesmo da conta no Firebase)</label><input class="in" id="a-mail" type="email" inputmode="email" autocapitalize="off" autocomplete="off" spellcheck="false" value="'+esc(a.id||"")+'"'+(a.id?' readonly':'')+'></div>'+
+   '<div class="field"><label for="a-mail">Utilizador (para entrar na app)</label><input class="in" id="a-mail" inputmode="text" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="ex.: mozal" value="'+esc(userName(a.id||""))+'"'+(a.id?' readonly':'')+'></div><div class="muted" id="a-hint" style="font-size:12.5px;margin:-4px 0 10px">No Firebase crie a conta com o e-mail <b>'+esc(a.id||"utilizador"+UDOM)+'</b>.</div>'+
    '<div class="field"><label for="a-fil">Oficina (só vê esta)</label><select class="in" id="a-fil">'+FILIAIS.map(function(f){return '<option value="'+f.id+'"'+(f.id===a.filial?" selected":"")+'>'+esc(f.nome)+'</option>'}).join("")+'</select></div>'+
    (a.id?'<label class="row" style="margin-top:6px;gap:10px;flex-wrap:nowrap"><input type="checkbox" id="a-ativo"'+(a.ativo!==false?" checked":"")+' style="width:20px;height:20px;accent-color:var(--red)"><span>Acesso ativo</span></label>':'')+
    '<div class="row" style="margin-top:16px"><button class="btn pri" style="flex:1" data-act="saveacesso" data-id="'+esc(a.id||"")+'">Guardar</button>'+(a.id?'<button class="btn danger" data-act="askdelacesso" data-id="'+esc(a.id)+'">Remover</button>':'')+'<button class="btn" data-act="closesheet">Fechar</button></div>');
@@ -1934,9 +1937,9 @@ document.addEventListener("click",function(e){
       sheet('<h3>Oficina</h3><p class="muted" style="margin:2px 0 12px">Escolha que oficina quer ver. Os painéis, listas, estoque e avisos mostram só essa oficina.</p>'+fo.map(function(f){return '<button class="btn'+(S.filial===f.id?" pri":"")+'" style="width:100%;margin-bottom:8px" data-act="setfilial" data-k="'+f.id+'">'+esc(f.nome)+'</button>'}).join("")+'<button class="btn" style="width:100%" data-act="closesheet">Fechar</button>');break}
     case "setfilial":{S.filial=el.dataset.k;lsSet("wr_filial",S.filial);applyF();closeSheet();if(S.view==="detail"||S.view==="edit"){S.view="home";S.id=null}render(true);toast(S.filial==="todas"?"A ver todas as oficinas":"Oficina: "+OF().filial);break}
     case "sheet-acesso":sheetAcesso(el.dataset.id?(S.acessos||[]).filter(function(x){return x.id===el.dataset.id})[0]:null);break;
-    case "saveacesso":{var an=$("#a-nome").value.trim(),ae=$("#a-mail").value.trim().toLowerCase(),af=$("#a-fil").value,aa=$("#a-ativo")?$("#a-ativo").checked:true;
+    case "saveacesso":{var an=$("#a-nome").value.trim(),ae=toEmail($("#a-mail").value),af=$("#a-fil").value,aa=$("#a-ativo")?$("#a-ativo").checked:true;
       if(!an){toast("Escreva o nome");return}
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ae)){toast("Escreva um e-mail válido");return}
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ae)){toast("Escreva o utilizador (só letras e números)");return}
       if(ae===String(FBU.email||"").toLowerCase()){toast("Este é o e-mail do dono");return}
       if(!FILIAIS.some(function(f){return f.id===af})){toast("Escolha a oficina");return}
       if(!db){return}
@@ -2139,9 +2142,9 @@ window.__wr={S:S,go:go};
       <h2 id="inTitle">Bem-vindo de volta</h2>
       <p class="sub" id="inSub">Entra para ver as ordens de serviço de hoje.</p>
       <div class="fld" id="fName"><label for="inName">Nome</label><div class="inp" id="wName"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><input id="inName" name="name" type="text" autocomplete="name" autocapitalize="words" placeholder="O teu nome"></div></div>
-      <div class="fld"><label for="inEmail">Email</label>
+      <div class="fld"><label for="inEmail">Utilizador ou e-mail</label>
         <div class="inp" id="wEmail"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-        <input id="inEmail" name="email" type="email" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="tu@oficina.co.mz"></div></div>
+        <input id="inEmail" name="email" type="text" inputmode="email" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="utilizador"></div></div>
       <div class="fld"><label for="inPass">Palavra-passe</label>
         <div class="inp" id="wPass"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
         <input id="inPass" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
@@ -2334,7 +2337,8 @@ function initLogin(){
   Card.addEventListener("submit",function(ev){
     ev.preventDefault();
     var email=E.value.trim().toLowerCase(),pw=P.value;
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return bad("Escreve um email válido","wEmail");
+    if(email&&email.indexOf("@")<0){email=email.replace(/\s+/g,"").replace(/[^a-z0-9._-]/g,"");if(email)email+="@wr-oficina.mz"}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return bad("Escreve o utilizador ou um email válido","wEmail");
     if(pw.length<6)return bad("A palavra-passe precisa de pelo menos 6 caracteres","wPass");
     var rem=$("inRem").checked;Go.disabled=true;
     if(mode==="create"){

@@ -1,4 +1,4 @@
-const C="wr-os-v20";
+const C="wr-os-v21";
 /* Push com a app fechada (Firebase Cloud Messaging) */
 try{
  self.window=self;
