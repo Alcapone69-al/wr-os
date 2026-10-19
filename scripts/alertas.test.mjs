@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { computeAlerts, buildMessages, diaLocal, horaLocal } from "./alertas.mjs";
+import { computeAlerts, alertasPara, buildMessages, diaLocal, horaLocal } from "./alertas.mjs";
 
 const now = Date.parse("2026-10-17T08:00:00Z"); // 10:00 em Maputo
 assert.equal(diaLocal(now), "2026-10-17");
@@ -36,4 +36,16 @@ assert.equal(r.msgs[0].tag, "2026-10-17|a|late");
 assert.match(r.msgs[0].body, /AAA · Ana \(Samora Machel\) — Atrasada 2 dia/);
 const moz = computeAlerts([{ id: "m", estado: "pendente", prazo: "2026-10-17", filial: "mozal", matricula: "MMM", cliente: "Mo" }], now);
 assert.match(buildMessages(moz, new Set(), now).msgs[0].body, /\(Mozal\)/);
+// por oficina: o utilizador da Mozal só recebe avisos da Mozal e nunca de orçamentos
+const mix = [
+  { id: "s1", estado: "pendente", prazo: "2026-10-17", matricula: "SSS" },
+  { id: "m1", estado: "pendente", prazo: "2026-10-17", filial: "mozal", matricula: "MMM" },
+  { id: "m2", estado: "orcamento", filial: "mozal", orcamento: [{ desc: "x", qtd: 1, preco: 5 }], orcTs: now - 3 * D },
+];
+assert.deepEqual(alertasPara(mix, "", now).map((a) => a.id).sort(), ["m1", "m2", "s1"]);
+assert.deepEqual(alertasPara(mix, "mozal", now).map((a) => a.id), ["m1"]);
+assert.deepEqual(alertasPara(mix, "samora", now).map((a) => a.id), ["s1"]);
+const k1 = buildMessages(alertasPara(mix, "mozal", now), new Set(), now, "@mozal").keys;
+assert.equal(k1[0], "2026-10-17_hoje_m1@mozal");
+assert.equal(buildMessages(alertasPara(mix, "", now), new Set(k1), now).msgs.length > 0, true); // chaves do dono são independentes
 console.log("alertas.test.mjs OK");

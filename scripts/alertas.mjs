@@ -37,11 +37,19 @@ export function computeAlerts(lista, now = Date.now()) {
   return out.sort((a, b) => a.d - b.d);
 }
 
+// Avisos para um grupo de aparelhos: filial "" = dono (vê tudo); "samora"/"mozal" = utilizador dessa oficina
+// (só as suas viaturas, e sem avisos de orçamento, que são valores).
+export function alertasPara(lista, filial, now = Date.now()) {
+  const l = filial ? lista.filter((o) => (o.filial || "samora") === filial) : lista;
+  const a = computeAlerts(l, now);
+  return filial ? a.filter((x) => x.kind !== "orc") : a;
+}
+
 // Converte alertas em mensagens (data-only, mostradas pelo service worker). Mais de 3 → resumo.
-export function buildMessages(alerts, jaEnviados, now = Date.now()) {
+export function buildMessages(alerts, jaEnviados, now = Date.now(), sufixo = "") {
   const td = diaLocal(now);
-  const novos = alerts.filter((a) => !jaEnviados.has(`${td}_${a.kind}_${a.id}`));
-  const keys = novos.map((a) => `${td}_${a.kind}_${a.id}`);
+  const novos = alerts.filter((a) => !jaEnviados.has(`${td}_${a.kind}_${a.id}${sufixo}`));
+  const keys = novos.map((a) => `${td}_${a.kind}_${a.id}${sufixo}`);
   if (!novos.length) return { msgs: [], keys };
   if (novos.length > 3)
     return { msgs: [{ title: "WR Oficina · Avisos", body: `${novos.length} viaturas precisam de atenção hoje. Abra a app para ver.`, tag: "prazos-" + td, url: "./" }], keys };

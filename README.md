@@ -6,11 +6,25 @@ Sistema de gestão de ordens de serviço da WR Auto Body (Matola, Moçambique). 
 
 A mesma app e a mesma base de dados servem as duas oficinas. Cada O.S. e cada peça de estoque pertence a uma oficina (campo "Oficina"). No topo, toque no nome da oficina para ver **Samora Machel**, **Mozal** ou **Todas**: painéis, listas, estoque, avisos e relatórios mostram só a oficina escolhida. Os dados antigos ficam na Samora Machel. A morada de cada oficina (usada nos PDFs e nas mensagens de WhatsApp) está em `FILIAIS` no `index.html`.
 
+## Material de pintura
+
+O estoque tem dois separadores: **Peças** e **Material de pintura** (tinta, verniz, massa de ferro, betume, lixas, fita, etc., cada um com a sua unidade: L, kg, rolo, folha...). Em "Estoque › Material de pintura › Criar a lista base de pintura" cria-se de uma vez a lista típica. Em cada O.S. há a secção **Material de pintura**: junta-se o material (do estoque, com quantidade) e marca-se o que já foi **usado**; ao marcar, o estoque desce sozinho (e volta se desmarcar ou remover). O custo do material usado entra na margem.
+
+## Utilizadores por oficina
+
+Além da conta do dono (`wrautobodyapp@gmail.com`, vê tudo), há utilizadores da função **Oficina**: cada um vê só as viaturas e os serviços de UMA oficina (Samora Machel ou Mozal), sem valores, clientes nem relatórios.
+
+1. Entre com a conta do dono › toque na letra do canto › **Utilizadores das oficinas** › **+ Utilizador** (nome, e-mail, oficina).
+2. No Firebase Console › Authentication › Users › **Add user**, crie a conta com o mesmo e-mail e uma palavra-passe.
+3. Publique as regras de `firestore.rules` (Firestore › Regras). Sem elas, a restrição por oficina só existe na interface.
+
+Quem não está na lista (e não é o dono) não entra. Para suspender, desmarque "Acesso ativo". As regras limitam cada utilizador à sua oficina também no servidor (O.S., estoque e fotos). Os registos antigos sem oficina recebem `samora` automaticamente quando o dono abre a app.
+
 ## Avisos com a app fechada (push)
 
 A app avisa prazos mesmo fechada: um robô gratuito do GitHub (Actions) corre de hora em hora, das 07h às 18h (Maputo), vê as O.S. na base de dados e envia push para os aparelhos registados.
 
-Avisa: entrega atrasada / hoje / amanhã, lembretes vencidos, viatura pronta há 2+ dias sem levantar, orçamento sem resposta há 2+ dias. Cada aviso é enviado uma vez por dia. Mais de 3 avisos juntam-se numa só notificação.
+Avisa: entrega atrasada / hoje / amanhã, lembretes vencidos, viatura pronta há 2+ dias sem levantar, orçamento sem resposta há 2+ dias. Cada aviso é enviado uma vez por dia. Os utilizadores de oficina só recebem os avisos da sua oficina, nunca os de orçamento. Mais de 3 avisos juntam-se numa só notificação.
 
 ### Configuração (uma vez)
 
