@@ -1,4 +1,4 @@
-const C="wr-os-v19";
+const C="wr-os-v20";
 /* Push com a app fechada (Firebase Cloud Messaging) */
 try{
  self.window=self;
@@ -11,7 +11,7 @@ try{
   });
  }
 }catch(e){}
-self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(["./","icon-192.png","manifest.webmanifest"]).catch(()=>{})));self.skipWaiting()});
+self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(["./","icon-192.png","logo-wr.jpg","manifest.webmanifest"]).catch(()=>{})));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener("fetch",e=>{const r=e.request;if(r.method!=="GET")return;
  if(r.mode==="navigate"){e.respondWith(fetch(r).then(x=>{const y=x.clone();caches.open(C).then(c=>c.put("./",y));return x}).catch(()=>caches.match("./")));return}

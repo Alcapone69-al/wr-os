@@ -98,7 +98,7 @@ svg.flip{transform:scaleY(-1)}
 
 /* cabeçalho de marca */
 .top{display:flex;align-items:center;gap:12px;padding-block:calc(14px + env(safe-area-inset-top,0px)) 12px}
-.logo{width:44px;height:44px;object-fit:cover;border-radius:11px;background:#000;display:block;border:1px solid var(--line)}
+.logo{width:auto;height:44px;max-width:64px;object-fit:contain;border-radius:10px;background:#000;display:block;border:1px solid var(--line)}
 .top .t{display:flex;flex-direction:column;min-width:0;line-height:1.05}
 .top .t b{font-family:var(--f-display);font-style:italic;font-weight:800;font-size:22px;letter-spacing:.03em;text-transform:uppercase;background:var(--chrome);-webkit-background-clip:text;background-clip:text;color:transparent}
 .top .t span{font-size:12px;color:var(--ink2);margin-top:2px}
@@ -173,6 +173,8 @@ button.pill{min-height:34px;padding:5px 12px;border:1px solid transparent}
 .tile span{font-size:12px;color:var(--ink2)}
 
 /* cartão de O.S. */
+.os,.rowc{content-visibility:auto;contain-intrinsic-size:auto 88px}
+.more{margin-top:12px}
 .os{display:flex;gap:12px;text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow);position:relative}
 .os::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--grad)}
 .os .th{flex:0 0 66px;height:66px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;color:var(--ink3)}
@@ -432,7 +434,7 @@ body.kb{padding-bottom:24px}
 
 /* login e equipa */
 .login{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:calc(24px + env(safe-area-inset-top,0px)) 0 calc(24px + env(safe-area-inset-bottom,0px))}
-.login .llogo{width:112px;max-width:40%;border-radius:25px}
+.login .llogo{width:190px;max-width:58%;height:auto;border-radius:18px}
 .login h1{font-size:34px}
 .login p{margin:0}
 .login .card{width:100%;text-align:left}
@@ -696,7 +698,7 @@ function isStandalone(){return (window.matchMedia&&window.matchMedia("(display-m
 function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
 function installCard(){
   if(window.claude||isStandalone()||lsGet("wr_inst_off",false))return "";
-  var logo='<img alt="" src="icon-192.png" onerror="this.style.display=\'none\'">';
+  var logo='<img alt="" src="logo-wr.jpg" onerror="this.style.display=\'none\'">';
   if(deferredPrompt)return '<div class="card install">'+logo+'<div class="tx"><b>Instalar a app WR Oficina</b>Abre em ecrã inteiro e funciona sem internet.</div><button class="btn sm pri" data-act="install">Instalar</button><button class="x" data-act="noinst" aria-label="Fechar">'+ic("trash").replace(P.trash,'<path d="M6 6l12 12M18 6L6 18"/>')+'</button></div>';
   if(isIOS())return '<div class="card install">'+logo+'<div class="tx"><b>Instale no iPhone</b>Toque em Partilhar e depois em Adicionar ao ecrã inicial.</div><button class="x" data-act="noinst" aria-label="Fechar">'+ic("trash").replace(P.trash,'<path d="M6 6l12 12M18 6L6 18"/>')+'</button></div>';
   return "";
@@ -906,11 +908,11 @@ function topbar(){
   var m=S.mode==="cloud"?"Nuvem":S.mode==="local"?"Aparelho":"A carregar";
   var nb=avisosUrg(),bell=S.me?'<button class="bellb" data-act="sheet-avisos" aria-label="Avisos de prazo'+(nb?' ('+nb+')':'')+'">'+ic("bell")+(nb?'<i>'+nb+'</i>':'')+'</button>':'';
   var av=S.me?'<button class="me" data-act="sheet-conta" aria-label="Conta de '+esc(S.me.nome)+'"><span class="av sm">'+esc(ini(S.me.nome))+'</span></button>':'';
-  return '<header class="top"><img class="logo" alt="WR Auto Body" src="icon-192.png"><div class="t"><b>WR Oficina</b><span>'+(S.me&&!meFilial()?'<button class="fsel" data-act="sheet-filial" aria-label="Mudar de oficina">'+esc(S.filial==="todas"?"Todas as oficinas":OF().filial)+ic("chev")+'</button>':esc(OF().filial))+'</span></div><span class="sync '+(S.mode==="cloud"?"":"local")+'">'+m+'</span>'+bell+av+'</header><hr class="flare">';
+  return '<header class="top"><img class="logo" alt="WR Auto Body" src="logo-wr.jpg" width="60" height="44" decoding="async"><div class="t"><b>WR Oficina</b><span>'+(S.me&&!meFilial()?'<button class="fsel" data-act="sheet-filial" aria-label="Mudar de oficina">'+esc(S.filial==="todas"?"Todas as oficinas":OF().filial)+ic("chev")+'</button>':esc(OF().filial))+'</span></div><span class="sync '+(S.mode==="cloud"?"":"local")+'">'+m+'</span>'+bell+av+'</header><hr class="flare">';
 }
 function pill(k){var s=stOf(k);return '<span class="pill st-'+s.k+'">'+s.l+'</span>'}
 function osCard(o){
-  var th=o.thumb?'<img alt="" src="'+esc(o.thumb)+'">':ic("car");
+  var th=o.thumb?'<img alt="" loading="lazy" decoding="async" src="'+esc(o.thumb)+'">':ic("car");
   var sv=(o.servicos||[]).slice(0,2).join(" · "),tot=totalOS(o);
   return '<button class="os" data-act="open" data-id="'+esc(o.id)+'"><div class="th">'+th+'</div><div class="bd">'+
    '<div class="r1"><span class="plate">'+esc(o.matricula||"—")+'</span>'+pill(o.estado)+'</div>'+
@@ -1008,7 +1010,10 @@ function viewList(){
   r+=rowsHtml(rows);
   return r+'</section>';
 }
-function rowsHtml(rows){return !rows.length?'<div class="empty">'+ic("car")+'<b>Nenhuma O.S. encontrada</b>Mude o filtro ou crie uma nova ordem de serviço.</div>':'<div class="list">'+rows.map(osCard).join("")+'</div>'}
+var LIM={os:40,cli:60,stk:80},PAGE={os:40,cli:60,stk:80};
+function pg(arr,k,fn){var n=LIM[k],h=arr.slice(0,n).map(fn).join("");
+  return arr.length>n?h+'<button class="btn block more" data-act="more" data-k="'+k+'">Mostrar mais ('+(arr.length-n)+')</button>':h}
+function rowsHtml(rows){return !rows.length?'<div class="empty">'+ic("car")+'<b>Nenhuma O.S. encontrada</b>Mude o filtro ou crie uma nova ordem de serviço.</div>':'<div class="list">'+pg(rows,"os",osCard)+'</div>'}
 
 function mecField(cur){
   var ms=S.users.filter(function(u){return u.papel==="mecanico"&&u.ativo!==false}).map(function(u){return u.nome});
@@ -1073,7 +1078,7 @@ function viewDetail(){
     var V=can("valores"),wa=phoneWa(o.telefone),pecas=o.pecas||[],orc=o.orcamento||[],links=o.links||[],tot=totalOS(o),pg=pago(o);
   var backL=S.from==="list"?"Voltar às O.S.":S.from==="clients"?"Voltar aos clientes":"Voltar ao painel";
   var h='<div style="height:14px"></div><button class="back" data-act="back">'+ic("back")+backL+'</button>';
-  h+='<div class="photos">'+S.fotos.map(function(f){return '<div class="ph"><button class="open" data-act="foto" data-id="'+esc(f.id)+'" aria-label="Abrir foto"><img alt="Foto da viatura" src="'+esc(f.src)+'"></button><button class="del" data-act="askdelfoto" data-id="'+esc(f.id)+'" aria-label="Apagar foto">'+ic("trash")+'</button></div>'}).join("")+
+  h+='<div class="photos">'+S.fotos.map(function(f){return '<div class="ph"><button class="open" data-act="foto" data-id="'+esc(f.id)+'" aria-label="Abrir foto"><img alt="Foto da viatura" decoding="async" src="'+esc(f.src)+'"></button><button class="del" data-act="askdelfoto" data-id="'+esc(f.id)+'" aria-label="Apagar foto">'+ic("trash")+'</button></div>'}).join("")+
    '<div class="ph add"><button data-act="addfoto">'+ic("img")+'Adicionar foto</button></div></div><input type="file" id="file" accept="image/*" multiple hidden><input type="file" id="cam" accept="image/*" capture="environment" hidden>';
   var A=['<button class="act" data-act="addfoto"><i class="c-r">'+ic("img")+'</i>+ Fotos</button>'];
   if(V)A.push('<button class="act" data-act="sheet-doc"><i class="c-w">'+ic("doc")+'</i>Orçamento</button>');
@@ -1145,8 +1150,8 @@ function viewClients(){
 }
 function clientsHtml(arr){
   if(!arr.length)return '<div class="empty">'+ic("users")+'<b>Sem clientes ainda</b>Os clientes aparecem aqui quando criar ordens de serviço.</div>';
-  return arr.map(function(c){var ini=(c.nome||"?").trim().charAt(0).toUpperCase();
-    return '<button class="rowc" data-act="client" data-q="'+esc(c.nome)+'"><span class="av">'+esc(ini)+'</span><span class="bd"><b>'+esc(c.nome)+'</b><span>'+esc(Object.keys(c.mats).join(" · ")||"Sem matrícula")+(c.tel?" · "+esc(c.tel):"")+'</span></span><span class="rt num">'+c.n+' O.S.<small>'+mt(c.total)+'</small></span></button>'}).join("");
+  return pg(arr,"cli",function(c){var ini=(c.nome||"?").trim().charAt(0).toUpperCase();
+    return '<button class="rowc" data-act="client" data-q="'+esc(c.nome)+'"><span class="av">'+esc(ini)+'</span><span class="bd"><b>'+esc(c.nome)+'</b><span>'+esc(Object.keys(c.mats).join(" · ")||"Sem matrícula")+(c.tel?" · "+esc(c.tel):"")+'</span></span><span class="rt num">'+c.n+' O.S.<small>'+mt(c.total)+'</small></span></button>'});
 }
 
 function stockList(){
@@ -1168,10 +1173,10 @@ function stockHtml(arr){
   if(!arr.length){
     if(mat)return '<div class="empty">'+ic("box")+'<b>Sem material de pintura</b>Aqui ficam a tinta, a massa, o betume, as lixas e tudo o que se gasta na pintura. Nas O.S. marca-se o que foi usado e o estoque desce sozinho.'+(ed?'<br><button class="btn pri" style="margin-top:12px" data-act="matbase">Criar a lista base de pintura</button>':'')+'</div>';
     return '<div class="empty">'+ic("box")+'<b>Estoque vazio</b>Adicione as peças da oficina. Ao registar uma peça numa O.S., a baixa é automática.</div>';}
-  return arr.map(function(s){var lowq=isLow(s),un=isMat(s)?' '+esc(unOf(s)):'';
+  return pg(arr,"stk",function(s){var lowq=isLow(s),un=isMat(s)?' '+esc(unOf(s)):'';
     return '<div class="rowc"><span class="bd"><b>'+esc(s.nome)+(s.demo?'<span class="tag">Exemplo</span>':'')+(s.fornecedor?'<span class="tag">'+esc(s.fornecedor)+'</span>':'')+'</b><span class="num">'+(can("valores")?'Custo '+mt(s.custo)+(isMat(s)?' / '+esc(unOf(s)):' · Venda '+mt(s.preco)):(lowq?'':'Disponível'))+(lowq?(can("valores")?' · ':'')+'<span class="low">Repor</span>':'')+'</span></span>'+
      (ed?'<span class="qty"><button data-act="stk" data-id="'+esc(s.id)+'" data-d="-1" aria-label="Menos">−</button><span class="num '+(lowq?"low":"")+'">'+esc(fq(s.qtd))+un+'</span><button data-act="stk" data-id="'+esc(s.id)+'" data-d="1" aria-label="Mais">+</button></span>'+
-     '<button class="x" data-act="sheet-stock" data-id="'+esc(s.id)+'" aria-label="Editar artigo">'+ic("edit")+'</button>':'<span class="qtyro num '+(lowq?"low":"")+'">'+esc(fq(s.qtd))+un+'</span>')+'</div>'}).join("");
+     '<button class="x" data-act="sheet-stock" data-id="'+esc(s.id)+'" aria-label="Editar artigo">'+ic("edit")+'</button>':'<span class="qtyro num '+(lowq?"low":"")+'">'+esc(fq(s.qtd))+un+'</span>')+'</div>'});
 }
 
 /* ===== painel do dono (com PIN) ===== */
@@ -1407,7 +1412,7 @@ function fxStop(){if(!fxRun)return;fxRun=false;cancelAnimationFrame(fxRaf);if(fx
 
 /* ===== login, conta e equipa ===== */
 function viewLogin(){
-  var L=S.lg,logo='<img class="llogo" alt="WR Auto Body" src="icon-512.png">';
+  var L=S.lg,logo='<img class="llogo" alt="WR Auto Body" src="logo-wr.jpg" decoding="async">';
   var eye='<button type="button" class="x" data-act="eye" aria-label="Mostrar palavra-passe" style="position:absolute;right:2px;top:2px">'+ic("img").replace(P.img,'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>')+'</button>';
   if(!S.users.length)return '<div class="login">'+logo+'<h1>Bem-vindo</h1><p class="muted">Crie a conta do proprietário. Depois adicione a equipa: gerente, recepção e mecânicos, cada um com o seu e-mail e palavra-passe.</p>'+
     '<div class="card"><div class="field"><label for="u-n">O seu nome</label><input class="in" id="u-n" autocapitalize="words" autocomplete="name" enterkeyhint="next"></div>'+
@@ -1775,8 +1780,9 @@ function render(force){
   document.body.classList.remove("lock");fxStop();
   if(VIEW_PERM[S.view]&&!can(VIEW_PERM[S.view]))S.view="home";
   var sy=window.scrollY,V=S.view;
-  APP.dataset.v=V;APP.innerHTML=V==="home"?viewHome():V==="list"?viewList():V==="new"?viewNew():V==="edit"?viewEdit():V==="clients"?viewClients():V==="stock"?viewStock():V==="rel"?viewDash():V==="team"?viewTeam():viewDetail();
-  APP.innerHTML+='<div class="pwr">Powered by <b>YFX</b></div>';
+  var html=(V==="home"?viewHome():V==="list"?viewList():V==="new"?viewNew():V==="edit"?viewEdit():V==="clients"?viewClients():V==="stock"?viewStock():V==="rel"?viewDash():V==="team"?viewTeam():viewDetail())+'<div class="pwr">Powered by <b>YFX</b></div>';
+  /* atualização em segundo plano (sem navegação) com o mesmo conteúdo: não mexe no ecrã (sem piscar, sem perder o que se escreveu) */
+  if(force||APP.dataset.v!==V||S.hh!==html){APP.dataset.v=V;APP.innerHTML=html;S.hh=html}
   checkPrazos();
   var cur=V==="home"||V==="rel"||V==="team"?"home":V==="new"?"new":V==="clients"?"clients":V==="stock"?"stock":"list";
   function tab(v,i,l){return '<button class="tab" data-act="tab" data-v="'+v+'" aria-current="'+(cur===v?"page":"false")+'">'+ic(i)+'<span>'+l+'</span></button>'}
@@ -1784,14 +1790,16 @@ function render(force){
   if(can("os.criar"))tb+='<button class="tab new" data-act="tab" data-v="new"><i>'+ic("plus")+'</i><span>Nova</span></button>';
   if(can("clientes"))tb+=tab("clients","users","Clientes");
   tb+=tab("stock","box","Estoque");
-  $("#tabs").innerHTML='<div class="in2" style="grid-template-columns:repeat('+(2+(can("os.criar")?1:0)+(can("clientes")?1:0)+1)+',1fr)">'+tb+'</div>';
-  window.scrollTo(0,sy);
+  var th='<div class="in2" style="grid-template-columns:repeat('+(2+(can("os.criar")?1:0)+(can("clientes")?1:0)+1)+',1fr)">'+tb+'</div>';
+  if(S.th!==th||!$("#tabs").firstChild){$("#tabs").innerHTML=th;S.th=th}
+  if(window.scrollY!==sy)window.scrollTo(0,sy);
 }
 function key(v,i){return v+":"+(i||"")}
 function go(view,id,silent){
   if(VIEW_PERM[view]&&!can(VIEW_PERM[view])){toast("Sem permissão para esta área");view="home";id=null}
   scrolls[key(S.view,S.id)]=window.scrollY;
   var changed=view!==S.view||(id||null)!==S.id;
+  if(view!==S.view){LIM.os=PAGE.os;LIM.cli=PAGE.cli;LIM.stk=PAGE.stk}
   S.from=S.view;S.view=view;S.id=id||null;
   if(view==="detail"||view==="edit")watchFotos(S.id);else watchFotos(null);
   closeSheet();render(true);
@@ -1875,7 +1883,7 @@ document.addEventListener("click",function(e){
     case "tab":S.q=(el.dataset.v==="list"||el.dataset.v==="clients"||el.dataset.v==="stock")?"":S.q;if(el.dataset.v==="list")S.filter="todos";go(el.dataset.v);break;
     case "open":go("detail",el.dataset.id);break;
     case "client":S.q=el.dataset.q;S.filter="todos";go("list");break;
-    case "filter":S.filter=el.dataset.k;if(S.view!=="list"){S.q="";S.view="list";render(true);window.scrollTo(0,0)}else render(true);break;
+    case "filter":S.filter=el.dataset.k;LIM.os=PAGE.os;if(S.view!=="list"){S.q="";S.view="list";render(true);window.scrollTo(0,0)}else render(true);break;
     case "period":S.period=el.dataset.k;render(true);break;
     case "edit":go("edit",S.id);break;
     case "svtoggle":el.setAttribute("aria-pressed",el.getAttribute("aria-pressed")==="true"?"false":"true");break;
@@ -1963,6 +1971,7 @@ document.addEventListener("click",function(e){
         if(mst)repoUpdate("estoque",mst,{qtd:rd((Number(mst.qtd)||0)+mm.qtd)});toast(mst?"Por usar. Voltou ao estoque":"Marcado como por usar")}break}
     case "delmat":{var dl=matsOf(o).slice(),dm=dl.splice(+el.dataset.i,1)[0];saveOS(o,{materiais:dl});
       if(dm&&dm.usado&&dm.stockId){var dst=getStock(dm.stockId);if(dst){repoUpdate("estoque",dst,{qtd:rd((Number(dst.qtd)||0)+dm.qtd)});toast("Material devolvido ao estoque")}}break}
+    case "more":LIM[el.dataset.k]+=PAGE[el.dataset.k];render(true);break;
     case "sheet-fase":sheetFase();break;
     case "fasebase":if(fasesOf(o).length)break;saveOS(o,{fases:FASEBASE.map(function(n){return {id:uid(),nome:n,prazo:"",feito:false}})});toast("Fases criadas. Defina o prazo de cada uma.");break;
     case "addfase":{var fn=($("#fz-n").value||$("#fz-o").value||"").trim();if(!fn){toast("Escreva o nome da fase");break}
@@ -2023,8 +2032,13 @@ document.addEventListener("change",function(e){
   else if(t.id==="obsI")saveOS(o,{obsInternas:t.value});
   else if(t.dataset&&t.dataset.chkobs){var co=Object.assign({},o.checkObs||{});co[t.dataset.chkobs]=t.value;saveOS(o,{checkObs:co})}
 });
+var qTimer=0;
 document.addEventListener("input",function(e){
   var id=e.target.id;
+  if(id==="q"||id==="qc"||id==="qs"){var tg=e.target;clearTimeout(qTimer);qTimer=setTimeout(function(){doSearch(tg)},140);return}
+  if(id==="mq"||(e.target.classList&&e.target.classList.contains("mqty")))doSearch(e.target)});
+function doSearch(tg){
+  var e={target:tg},id=tg.id;LIM.os=PAGE.os;LIM.cli=PAGE.cli;LIM.stk=PAGE.stk;
   if(id==="q"){S.q=e.target.value;var q=S.q.trim().toLowerCase();
     var rows=OSL().filter(function(o){if(S.filter!=="todos"&&o.estado!==S.filter)return false;return !q||[o.cliente,o.matricula,o.marca,o.modelo,o.mecanico,o.telefone].join(" ").toLowerCase().indexOf(q)>-1}).sort(function(a,b){return (b.atualizado||0)-(a.atualizado||0)});
     $("#rows").innerHTML=rowsHtml(rows)}
@@ -2033,7 +2047,7 @@ document.addEventListener("input",function(e){
   else if(id==="qs"){S.q=e.target.value;$("#srows").innerHTML=stockHtml(stockList())}
   else if(id==="mq"){var mqq=e.target.value.trim().toLowerCase();[].slice.call(document.querySelectorAll(".mrow")).forEach(function(r){r.hidden=!!mqq&&r.dataset.n.indexOf(mqq)<0})}
   else if(e.target.classList&&e.target.classList.contains("mqty")){var mck=e.target.closest(".mrow").querySelector(".mpk");if(mck)mck.checked=true}
-});
+}
 document.addEventListener("focusout",function(){setTimeout(function(){if(S.deferred&&!typing())render()},120)});
 
 /* ===== teclado, gesto de voltar, instalação offline ===== */
@@ -2244,7 +2258,8 @@ function play(){
     stage.animate([{filter:"drop-shadow(0 0 0 rgba(240,69,42,0))"},{filter:"drop-shadow(0 0 26px rgba(240,69,42,.75))",offset:.35},{filter:"drop-shadow(0 0 6px rgba(240,69,42,.18))"}],{duration:900,easing:"ease-out",fill:"both"});
     ring.animate([{opacity:.9,transform:"scale(.25)"},{opacity:0,transform:"scale(1.15)"}],{duration:850,easing:"cubic-bezier(.2,.8,.2,1)",fill:"both"});
   },total-160);
-  setTimeout(toLogin,total+700);
+  var seen=false;try{seen=localStorage.getItem("wr_intro_seen")==="1";localStorage.setItem("wr_intro_seen","1")}catch(e){}
+  setTimeout(toLogin,seen?1500:total+700);
   $("inSkip").animate([{opacity:0},{opacity:.8}],{duration:400,delay:900,fill:"both"});
 }
 function skip(){
