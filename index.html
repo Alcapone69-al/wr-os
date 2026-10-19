@@ -524,6 +524,47 @@ body.lock #fx{display:block}
   .list:has(>.os){grid-template-columns:repeat(3,1fr)}
   .app{max-width:1280px}
 }
+/* ===== robustez entre dispositivos ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-wrap:anywhere;overflow-x:hidden}
+img,video,canvas,svg{max-width:100%}
+@media (min-width:720px){
+  .app{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .list:has(>.os){grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media (min-width:1440px){.list:has(>.os){grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1920px){.app{max-width:1480px}.sheet{max-width:560px}}
+.os .r1{flex-wrap:wrap;row-gap:4px}
+.os .r1 .pill{flex:0 0 auto}
+.os .r3 span:last-child{white-space:nowrap;flex:0 0 auto}
+.os .nm{min-width:0;flex:1 1 auto}
+.os .nm .tag{display:inline-block;max-width:100%}
+.stc b{font-size:clamp(22px,6.4vw,28px)}
+@media (min-width:720px){.stc b{font-size:28px}}
+.top .t b{font-size:clamp(15px,5vw,22px);letter-spacing:.01em}
+@media (max-width:360px){.top{gap:8px}.top .logo{height:38px;max-width:54px}}
+.sheet{max-height:92vh;max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.scrim{overscroll-behavior:contain}
+/* alvos de toque confortáveis em ecrãs tácteis */
+@media (pointer:coarse){
+  .chip,.btn.sm,.x,.bellb,.me,.thumb,.back,.fsel,.qty button,.grp .gh button,.tk,[data-act="fasedel"],[data-act="delpeca"],[data-act="sheet-conta"],[data-act="sheet-avisos"]{min-height:44px;min-width:44px}
+  .chip,.btn.sm{display:inline-flex;align-items:center;justify-content:center}
+  .qty button{height:44px}
+  .tab{min-height:56px}
+}
+/* telemóvel em paisagem: pouca altura */
+@media (orientation:landscape) and (max-height:500px){
+  .tab{min-height:44px;flex-direction:row;justify-content:center;gap:8px;padding:4px 0}
+  .tab.new i{height:24px;width:44px}
+  .top{padding-block:calc(6px + env(safe-area-inset-top,0px)) 6px}
+  .login{justify-content:flex-start}
+  .login .llogo{width:110px}
+  .app,.tabs .in2{padding-left:max(var(--gut,16px),env(safe-area-inset-left,0px));padding-right:max(var(--gut,16px),env(safe-area-inset-right,0px))}
+}
+/* hover apenas com rato; foco visível por teclado */
+@media (hover:none){.tab:hover,.back:hover{background:none}}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+@media (forced-colors:active){.pill,.chip,.btn{border:1px solid ButtonText}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media (max-width:380px){.acts{gap:0}.act i{width:42px;height:42px}.act{font-size:10.5px}}
 .st-chapa{background:var(--s-chapa-bg);color:var(--s-chapa)}
@@ -1314,7 +1355,7 @@ function avisos(){
     if(o.estado!=="pronta"||(S.me&&!canSee(o)))return;
     var pt=lastTs(o,"pronta");
     if(pt&&Date.now()-pt>=2*864e5)out.push({o:o,d:0,k:"pronta",kind:"pronta",txt:"Pronta há "+Math.floor((Date.now()-pt)/864e5)+" dias. Avise o cliente"})});
-  orcParados().forEach(function(o){out.push({o:o,d:0,k:"orc",kind:"orc",txt:"Orçamento sem resposta há "+Math.floor((Date.now()-orcRef(o))/864e5)+" dias"})});
+  if(can("valores"))orcParados().forEach(function(o){out.push({o:o,d:0,k:"orc",kind:"orc",txt:"Orçamento sem resposta há "+Math.floor((Date.now()-orcRef(o))/864e5)+" dias"})});
   return out.sort(function(a,b){return a.d-b.d});
 }
 function avisosUrg(){return avisos().filter(function(a){return a.d<=1}).length}
