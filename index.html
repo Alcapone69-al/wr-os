@@ -1822,22 +1822,12 @@ function startFor(n){
 var anims=[];
 function T(s){return"translate("+s.dx+"px,"+s.dy+"px) rotate("+s.rot+"deg) scale("+s.sc+")"}
 function build(){
-  var k=stage.getBoundingClientRect().width/BW; // px por unidade
-  var order=["tl","tr","bl","br","spark0","spark1","spark2","spark3","ab2","ab3","ab4","ab0","ab5","ab6","ab1","ab7","wr0","wr1","gear"];
-  order.forEach(function(n,i){
-    var im=imgs[n];if(!im)return;
-    var s=startFor(n);s={dx:s.dx*k,dy:s.dy*k,rot:s.rot,sc:s.sc};
-    var drift={dx:s.dx*1.06+rr(-4,4)*k,dy:s.dy*1.06+rr(-4,4)*k,rot:s.rot+rr(-8,8),sc:s.sc};
-    var wrench=/^(tl|tr|bl|br)$/.test(n);
-    var dur=wrench?1500:/^spark/.test(n)?900:1100;
-    var delay=wrench?i*70:/^spark/.test(n)?1250+(i-4)*70:/^ab/.test(n)?480+(i-8)*60:/^wr/.test(n)?900+(i-16)*90:1000;
-    var a=im.animate([
-      {transform:T(s),opacity:0,filter:"blur(8px)",offset:0,easing:"ease-out"},
-      {transform:T(drift),opacity:1,filter:"blur(0px)",offset:.3,easing:"cubic-bezier(.72,0,.18,1.12)"},
-      {transform:"translate(0,0) rotate(0deg) scale(1)",opacity:1,filter:"blur(0px)",offset:1}
-    ],{duration:dur+420,delay:delay,fill:"both"});
-    anims.push(a);
-  });
+  /* abertura limpa: a logo oficial inteira aparece, sem peças a voar */
+  finalState();
+  anims.push(stage.animate([
+    {opacity:0,transform:"scale(.84)",filter:"blur(16px)"},
+    {opacity:1,transform:"scale(1)",filter:"blur(0px)"}
+  ],{duration:1100,easing:"cubic-bezier(.22,1,.36,1)",fill:"both"}));
 }
 function finalState(){names.forEach(function(n){imgs[n].style.opacity="1"})}
 
@@ -1871,7 +1861,7 @@ function play(){
     stage.animate([{filter:"drop-shadow(0 0 0 rgba(240,69,42,0))"},{filter:"drop-shadow(0 0 26px rgba(240,69,42,.75))",offset:.35},{filter:"drop-shadow(0 0 6px rgba(240,69,42,.18))"}],{duration:900,easing:"ease-out",fill:"both"});
     ring.animate([{opacity:.9,transform:"scale(.25)"},{opacity:0,transform:"scale(1.15)"}],{duration:850,easing:"cubic-bezier(.2,.8,.2,1)",fill:"both"});
   },total-160);
-  setTimeout(toLogin,total+700);
+  setTimeout(toLogin,total+1500);
   $("inSkip").animate([{opacity:0},{opacity:.8}],{duration:400,delay:900,fill:"both"});
 }
 function skip(){
