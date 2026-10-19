@@ -566,6 +566,9 @@ var CHECK=[
 ];
 var MAXFOTOS=12;
 var UNID=["un","L","kg","lata","rolo","folha","m","par"];
+var FASEBASE=["Bate-chapa","Preparação para pintura","Pintura","Polimento","Lavagem"];
+function fasesOf(o){return o.fases||[]}
+function faseInfo(f){if(!f.prazo)return null;var d=Math.ceil((new Date(f.prazo+"T00:00")-new Date(today()+"T00:00"))/864e5);return {d:d,late:d<0&&!f.feito,txt:d<0?"atrasada "+(-d)+" dia(s)":d===0?"termina hoje":d===1?"termina amanhã":"termina em "+d+" dias"}}
 var MATBASE=[["Tinta base (cor)","L"],["Tinta metálica / perolada","L"],["Verniz","L"],["Endurecedor (verniz)","L"],["Diluente","L"],["Primário / fundo","L"],["Desengordurante","L"],["Massa de ferro (poliéster)","kg"],["Betume (massa fina)","kg"],["Endurecedor de massa","un"],["Lixa 80","folha"],["Lixa 120","folha"],["Lixa 180","folha"],["Lixa 240","folha"],["Lixa 320","folha"],["Lixa 400","folha"],["Lixa 600","folha"],["Lixa 800","folha"],["Lixa 1000","folha"],["Lixa de água 1500","folha"],["Fita de pintor","rolo"],["Papel de proteção","rolo"],["Plástico de proteção","rolo"],["Composto de polimento","L"],["Panos de limpeza","un"],["Selante / vedante","un"]];
 function isMat(s){return !!s&&s.tipo==="material"}
 function unOf(x){return x&&x.un?x.un:"un"}
@@ -648,7 +651,7 @@ var ALLP=["os.todas","os.criar","os.editar","os.apagar","valores","clientes","re
 var PERM={proprietario:ALLP,gerente:ALLP.filter(function(p){return p!=="equipa"}),
   recepcao:["os.todas","os.criar","os.editar","valores","clientes","estoque","estoque.editar","status.finalizar"],
   mecanico:["estoque"],oficina:["os.todas","os.criar","os.editar","estoque","status.finalizar"]};
-var ACT_PERM={"sheet-acesso":"equipa",saveacesso:"equipa",askdelacesso:"equipa",delacesso:"equipa","sheet-sign":"os.editar",savesign:"os.editar",clearsign:"os.editar","exp-os":"relatorios","exp-pag":"relatorios","exp-stk":"relatorios",backup:"equipa",create:"os.criar",saveedit:"os.editar",edit:"os.editar",askdelete:"os.apagar",confirmdelete:"os.apagar","sheet-orc":"valores","sheet-doc":"valores","sheet-pay":"valores",addorc:"valores",delorc:"valores",aprov:"valores",pdf:"valores",addpay:"valores",delpay:"valores","sheet-stock":"estoque.editar",savestock:"estoque.editar",delstock:"estoque.editar",stk:"estoque.editar",askclear:"equipa",clear:"equipa","sheet-user":"equipa",saveuser:"equipa",askdeluser:"equipa",deluser:"equipa",goteam:"equipa"};
+var ACT_PERM={"sheet-fase":"os.editar",fasebase:"os.editar",addfase:"os.editar",fasedel:"os.editar","sheet-acesso":"equipa",saveacesso:"equipa",askdelacesso:"equipa",delacesso:"equipa","sheet-sign":"os.editar",savesign:"os.editar",clearsign:"os.editar","exp-os":"relatorios","exp-pag":"relatorios","exp-stk":"relatorios",backup:"equipa",create:"os.criar",saveedit:"os.editar",edit:"os.editar",askdelete:"os.apagar",confirmdelete:"os.apagar","sheet-orc":"valores","sheet-doc":"valores","sheet-pay":"valores",addorc:"valores",delorc:"valores",aprov:"valores",pdf:"valores",addpay:"valores",delpay:"valores","sheet-stock":"estoque.editar",savestock:"estoque.editar",delstock:"estoque.editar",stk:"estoque.editar",askclear:"equipa",clear:"equipa","sheet-user":"equipa",saveuser:"equipa",askdeluser:"equipa",deluser:"equipa",goteam:"equipa"};
 var VIEW_PERM={"new":"os.criar",edit:"os.editar",clients:"clientes",rel:"relatorios",team:"equipa"};
 var DEMOPW="wr1234",DEMO={William:{e:"william@wr.demo"},Marta:{e:"marta@wr.demo"},Ana:{e:"ana@wr.demo"},Stiff:{e:"stiff@wr.demo"},Jorge:{e:"jorge@wr.demo"}};
 function can(p){return !!(S.me&&PERM[S.me.papel]&&PERM[S.me.papel].indexOf(p)>-1)}
@@ -1094,6 +1097,7 @@ function viewDetail(){
   else{h+=pecas.map(function(p,i){return '<div class="line"><div class="n">'+esc(p.nome)+(p.stockId?'<span class="tag">Estoque</span>':'')+'<small class="num">'+esc(p.qtd)+(V?' × '+mt(p.custo):' un.')+'</small></div><div class="row" style="flex-wrap:nowrap;gap:2px">'+(V?'<span class="v num">'+mt(p.qtd*p.custo)+'</span>':'')+'<button class="x" data-act="delpeca" data-i="'+i+'" aria-label="Remover peça">'+ic("trash")+'</button></div></div>'}).join("");
     if(V)h+='<div class="totalrow"><span class="muted">Custo das peças</span><b class="num">'+mt(sumCusto(pecas))+'</b></div>'}
   h+='</div></section>';
+  h+=fasesHtml(o);
   h+=matHtml(o);
   /* orçamento */
   if(V){
@@ -1293,6 +1297,10 @@ function avisos(){
     var p=prazoInfo(o);if(!p||p.d>3)return;
     out.push({o:o,d:p.d,k:"prazo",kind:p.d<0?"late":p.d===0?"hoje":p.d===1?"amanha":"breve",txt:p.txt})});
   S.os.forEach(function(o){
+    if(o.estado==="finalizado"||(S.me&&!canSee(o)))return;
+    fasesOf(o).forEach(function(f){if(f.feito||!f.prazo)return;var pi=faseInfo(f);if(!pi||pi.d>1)return;
+      out.push({o:o,d:pi.d,k:"fase",fid:f.id,fz:f.prazo,kind:pi.d<0?"fase_late":pi.d===0?"fase_hoje":"fase_amanha",title:pi.d<0?"Fase atrasada":pi.d===0?"Fase termina hoje":"Fase termina amanhã",txt:f.nome+" — "+pi.txt})})});
+  S.os.forEach(function(o){
     var l=o.lembrete;if(!l||!l.quando||l.feito||o.estado==="finalizado")return;if(S.me&&!canSee(o))return;
     var dd=l.quando.slice(0,10);if(dd>td)return;
     out.push({o:o,d:dd<td?-1:0,k:"lem",kind:"lem",txt:"Lembrete: "+(l.texto||"sem texto")})});
@@ -1306,7 +1314,7 @@ function avisos(){
 function avisosUrg(){return avisos().filter(function(a){return a.d<=1}).length}
 function avisoRow(a){
   var o=a.o,p=fichaProg(o);
-  return '<button class="line" data-act="open" data-id="'+esc(o.id)+'" style="width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;color:inherit"><div class="n"><b>'+esc(o.matricula||"—")+'</b> · '+esc(o.cliente||"Sem nome")+'<small><span class="'+(a.d<0?"late":"")+'">'+esc(a.txt)+'</span>'+(a.k==="prazo"&&p.n?" · "+p.p+"% certo":"")+'</small></div><span class="num" style="white-space:nowrap">'+(a.k==="prazo"?esc(sdate(o.prazo)):"")+'</span></button>'}
+  return '<button class="line" data-act="open" data-id="'+esc(o.id)+'" style="width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;color:inherit"><div class="n"><b>'+esc(o.matricula||"—")+'</b> · '+esc(o.cliente||"Sem nome")+'<small><span class="'+(a.d<0?"late":"")+'">'+esc(a.txt)+'</span>'+(a.k==="prazo"&&p.n?" · "+p.p+"% certo":"")+'</small></div><span class="num" style="white-space:nowrap">'+(a.k==="prazo"?esc(sdate(o.prazo)):a.k==="fase"?esc(sdate(a.fz)):"")+'</span></button>'}
 function notifState(){try{return ("Notification" in window)?Notification.permission:"unsupported"}catch(e){return "unsupported"}}
 function avisosSec(){
   var A=avisos();if(!A.length)return "";
@@ -1315,7 +1323,7 @@ function avisosSec(){
 function sheetAvisos(){
   var A=avisos(),st=notifState(),nb;
   nb=st==="granted"?'<p class="muted" style="font-size:13px">Notificações de prazo ativas neste aparelho.</p>':st==="denied"?'<p class="muted" style="font-size:13px">As notificações estão bloqueadas. Ative-as nas definições do browser para este site.</p>':st==="unsupported"?'<p class="muted" style="font-size:13px">Este aparelho não suporta notificações.</p>':'<button class="btn pri block" data-act="notifon">Ativar notificações de prazos</button>';
-  sheet('<h3>Avisos de prazo</h3><p class="muted" style="margin:2px 0 12px">Entregas atrasadas, de hoje, de amanhã e dos próximos 3 dias.</p>'+(A.length?'<div class="card">'+A.map(avisoRow).join("")+'</div>':'<div class="empty">'+ic("check")+'<b>Sem prazos a vencer</b>Nenhuma entrega atrasada ou nos próximos 3 dias.</div>')+'<div style="margin-top:14px">'+nb+''+pushNote()+'</div><button class="btn block" style="margin-top:10px" data-act="closesheet">Fechar</button>')}
+  sheet('<h3>Avisos de prazo</h3><p class="muted" style="margin:2px 0 12px">Entregas e fases do trabalho atrasadas, de hoje e de amanhã; entregas dos próximos 3 dias.</p>'+(A.length?'<div class="card">'+A.map(avisoRow).join("")+'</div>':'<div class="empty">'+ic("check")+'<b>Sem prazos a vencer</b>Nenhuma entrega atrasada ou nos próximos 3 dias.</div>')+'<div style="margin-top:14px">'+nb+''+pushNote()+'</div><button class="btn block" style="margin-top:10px" data-act="closesheet">Fechar</button>')}
 function showN(t,b,tag){
   var opt={body:b,tag:tag,icon:"icon-192.png",badge:"icon-192.png"};
   function fb(){try{new Notification(t,opt)}catch(e){}}
@@ -1327,11 +1335,11 @@ function checkPrazos(force){
     if(!force&&Date.now()-NT.t<60000)return;NT.t=Date.now();
     if(new Date().getHours()<7)return;
     var td=today(),old=lsGet("wr_notif",{}),seen={};Object.keys(old).forEach(function(k){if(k.indexOf(td+"|")===0)seen[k]=1});
-    var nw=avisos().filter(function(a){return a.d<=1||a.k==="lem"}).filter(function(a){var k=td+"|"+a.o.id+"|"+a.kind;if(seen[k])return false;seen[k]=1;return true});
+    var nw=avisos().filter(function(a){return a.d<=1||a.k==="lem"}).filter(function(a){var k=td+"|"+a.o.id+"|"+a.kind+(a.fid?"|"+a.fid:"");if(seen[k])return false;seen[k]=1;return true});
     lsSet("wr_notif",seen);
     if(!nw.length)return;
     if(nw.length>3){showN("WR Oficina · Prazos",nw.length+" viaturas precisam de atenção hoje. Abra a app para ver.","prazos-"+td);return}
-    nw.forEach(function(a){showN(a.d<0?"Entrega atrasada":a.k==="lem"?"Lembrete":a.k==="orc"?"Orçamento sem resposta":a.k==="pronta"?"Viatura pronta":a.d===0?"Entrega hoje":"Entrega amanhã",(a.o.matricula||"—")+" · "+(a.o.cliente||"Sem nome")+" — "+a.txt,td+"|"+a.o.id+"|"+a.kind)})
+    nw.forEach(function(a){showN(a.k==="fase"?a.title:a.d<0?"Entrega atrasada":a.k==="lem"?"Lembrete":a.k==="orc"?"Orçamento sem resposta":a.k==="pronta"?"Viatura pronta":a.d===0?"Entrega hoje":"Entrega amanhã",(a.o.matricula||"—")+" · "+(a.o.cliente||"Sem nome")+" — "+a.txt,td+"|"+a.o.id+"|"+a.kind+(a.fid?"|"+a.fid:""))})
   }catch(e){}}
 
 
@@ -1587,6 +1595,21 @@ function sheetMat(o){
    '<label class="row" style="margin-top:6px;gap:10px;flex-wrap:nowrap"><input type="checkbox" id="mc-u" checked style="width:20px;height:20px;accent-color:var(--red)"><span>Já usado (dar baixa no estoque agora)</span></label>'+
    '<div class="row" style="margin-top:16px"><button class="btn pri" style="flex:1" data-act="addmat">Adicionar</button><button class="btn" data-act="closesheet">Fechar</button></div>');
 }
+function fasesHtml(o){
+  var F=fasesOf(o),ed=can("os.editar"),nd=F.filter(function(f){return f.feito}).length;
+  var h='<section class="sec">'+hdr("Fases do trabalho",F.length?nd+" de "+F.length+" concluída(s)":"Etapas e prazos",ed?'<button class="btn sm pri" data-act="sheet-fase">+ Fase</button>':'')+'<div class="card">';
+  if(!F.length)h+='<div class="muted" style="font-size:13.5px">Divida a obra em etapas (bate-chapa, preparação, pintura, polimento, lavagem), cada uma com o seu prazo. A app avisa quando o prazo de uma fase está a terminar.</div>'+(ed?'<button class="btn pri block" style="margin-top:12px" data-act="fasebase">Criar as 5 fases da pintura</button>':'');
+  else h+=F.map(function(f){var pi=faseInfo(f);
+    return '<div class="fr mt'+(f.feito?' ok':'')+'"><button class="tk" data-act="fasedone" data-id="'+esc(f.id)+'" aria-pressed="'+!!f.feito+'" aria-label="'+(f.feito?"Marcar como por concluir":"Marcar como concluída")+'">'+ic("check")+'</button><div class="tx">'+esc(f.nome)+'<small class="num">'+(f.feito?"concluída"+(f.t?" em "+esc(sdate(dkey(new Date(f.t)))):""):pi?'<span class="'+(pi.late?"late":"")+'">'+esc(pi.txt)+'</span>':"sem prazo")+'</small></div>'+
+      (ed?'<input class="in fzd" type="date" data-id="'+esc(f.id)+'" value="'+esc(f.prazo||"")+'" aria-label="Prazo de '+esc(f.nome)+'" style="width:auto;flex:none">':(f.prazo?'<span class="num">'+esc(sdate(f.prazo))+'</span>':''))+
+      (ed?'<button class="x" data-act="fasedel" data-id="'+esc(f.id)+'" aria-label="Remover fase">'+ic("trash")+'</button>':'')+'</div>'}).join("");
+  return h+'</div></section>'}
+function sheetFase(){
+  sheet('<h3>Nova fase</h3><div class="muted">Escolha a etapa e o prazo em que deve estar concluída.</div>'+
+   '<div class="field"><span class="lab">Etapa</span><select class="in" id="fz-n">'+FASEBASE.map(function(n){return '<option>'+esc(n)+'</option>'}).join("")+'<option value="">Outra…</option></select></div>'+
+   '<div class="field"><span class="lab">Outro nome (só se escolheu "Outra")</span><input class="in" id="fz-o" placeholder="Ex.: Alinhamento" autocomplete="off"></div>'+
+   '<div class="field"><span class="lab">Prazo</span><input class="in" id="fz-d" type="date"></div>'+
+   '<div class="row" style="margin-top:16px"><button class="btn pri" style="flex:1" data-act="addfase">Adicionar</button><button class="btn" data-act="closesheet">Fechar</button></div>')}
 function matHtml(o){
   var V=can("valores"),M=matsOf(o),u=M.filter(function(m){return m.usado}).length;
   var h='<section class="sec">'+hdr("Material de pintura",M.length?u+" de "+M.length+" usado(s)":"Nada registado",'<button class="btn sm pri" data-act="sheet-mat">+ Adicionar</button>')+'<div class="card">';
@@ -1939,6 +1962,12 @@ document.addEventListener("click",function(e){
         if(mst)repoUpdate("estoque",mst,{qtd:rd((Number(mst.qtd)||0)+mm.qtd)});toast(mst?"Por usar. Voltou ao estoque":"Marcado como por usar")}break}
     case "delmat":{var dl=matsOf(o).slice(),dm=dl.splice(+el.dataset.i,1)[0];saveOS(o,{materiais:dl});
       if(dm&&dm.usado&&dm.stockId){var dst=getStock(dm.stockId);if(dst){repoUpdate("estoque",dst,{qtd:rd((Number(dst.qtd)||0)+dm.qtd)});toast("Material devolvido ao estoque")}}break}
+    case "sheet-fase":sheetFase();break;
+    case "fasebase":if(fasesOf(o).length)break;saveOS(o,{fases:FASEBASE.map(function(n){return {id:uid(),nome:n,prazo:"",feito:false}})});toast("Fases criadas. Defina o prazo de cada uma.");break;
+    case "addfase":{var fn=($("#fz-n").value||$("#fz-o").value||"").trim();if(!fn){toast("Escreva o nome da fase");break}
+      saveOS(o,{fases:fasesOf(o).concat([{id:uid(),nome:fn,prazo:$("#fz-d").value||"",feito:false}])});closeSheet();break}
+    case "fasedone":saveOS(o,{fases:fasesOf(o).map(function(f){if(f.id!==el.dataset.id)return f;var n=Object.assign({},f);n.feito=!f.feito;n.t=n.feito?Date.now():null;return n})});break;
+    case "fasedel":saveOS(o,{fases:fasesOf(o).filter(function(f){return f.id!==el.dataset.id})});break;
     case "sheet-orc":sheetOrc();break;
     case "sheet-doc":sheetDoc(o);break;
     case "sheet-pay":sheetPay(o);break;
@@ -1987,6 +2016,7 @@ document.addEventListener("change",function(e){
   if(t.id==="s-st"){var s=getStock(t.value);if(s){$("#s-d").value=s.nome;if($("#s-c"))$("#s-c").value=s.custo||"";if($("#s-p"))$("#s-p").value=s.preco||""}return}
   if(!o)return;
   if(t.id==="file"||t.id==="cam"){handleFiles(o,t.files);t.value="";return}
+  if(t.classList&&t.classList.contains("fzd")){if(can("os.editar"))saveOS(o,{fases:fasesOf(o).map(function(f){if(f.id!==t.dataset.id)return f;var n=Object.assign({},f);n.prazo=t.value;return n})});return}
   if(t.id==="obsG")saveOS(o,{obsGerais:t.value});
   else if(t.id==="f-prazo2")saveOS(o,{prazo:t.value});
   else if(t.id==="obsI")saveOS(o,{obsInternas:t.value});

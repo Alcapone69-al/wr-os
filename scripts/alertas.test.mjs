@@ -48,4 +48,21 @@ assert.deepEqual(alertasPara(mix, "samora", now).map((a) => a.id), ["s1"]);
 const k1 = buildMessages(alertasPara(mix, "mozal", now), new Set(), now, "@mozal").keys;
 assert.equal(k1[0], "2026-10-17_hoje_m1@mozal");
 assert.equal(buildMessages(alertasPara(mix, "", now), new Set(k1), now).msgs.length > 0, true); // chaves do dono são independentes
+// fases: cada fase tem o seu prazo e o seu aviso
+const fz = [{ id: "z", estado: "chapa", matricula: "ZZZ", cliente: "Zé", filial: "mozal", prazo: "2026-11-30", fases: [
+  { id: "f1", nome: "Bate-chapa", prazo: "2026-10-17" },
+  { id: "f2", nome: "Preparação para pintura", prazo: "2026-10-18" },
+  { id: "f3", nome: "Pintura", prazo: "2026-10-20" },
+  { id: "f4", nome: "Polimento", prazo: "2026-10-10", feito: true },
+  { id: "f5", nome: "Lavagem", prazo: "" } ] }];
+const fa = computeAlerts(fz, now);
+assert.deepEqual(fa.map((a) => a.kind + ":" + a.fid), ["fase_hoje:f1", "fase_amanha:f2"]);
+const fm = buildMessages(fa, new Set(), now);
+assert.equal(fm.msgs.length, 2);
+assert.equal(fm.msgs[0].title, "Fase termina hoje");
+assert.match(fm.msgs[0].body, /ZZZ · Zé \(Mozal\) — Bate-chapa — termina hoje/);
+assert.equal(fm.keys[0], "2026-10-17_fase_hoje_z.f1");
+assert.equal(buildMessages(fa, new Set(fm.keys), now).msgs.length, 0);
+assert.equal(alertasPara(fz, "samora", now).length, 0);
+assert.equal(alertasPara(fz, "mozal", now).length, 2);
 console.log("alertas.test.mjs OK");
