@@ -31,9 +31,11 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/os/$(osId)).data.filial == acesso().filial;
     }
 
-    // Interruptor de pausa: qualquer conta com sessão lê (para mostrar "Em pausa"); só a YFX escreve, pela consola.
+    // Interruptor de pausa: qualquer conta com sessão lê (para mostrar o ecrã de erro); só a conta da YFX escreve.
     match /config/estado {
       allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.token.email == 'yassinibrahimo69@gmail.com';
     }
 
     // Lista de utilizadores: só o dono escreve; cada utilizador lê o seu registo.
@@ -71,8 +73,10 @@ service cloud.firestore {
     }
 
     // Todo o resto (PIN do dono, avisos enviados, ...): só o dono.
+    // (o interruptor /config/estado fica de fora: só a YFX o escreve.)
     match /{document=**} {
-      allow read, write: if dono();
+      allow read, write: if dono()
+        && request.path != /databases/$(database)/documents/config/estado;
     }
   }
 }

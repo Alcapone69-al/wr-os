@@ -50,10 +50,10 @@ Avisa: entrega atrasada / hoje / amanhã, lembretes vencidos, viatura pronta há
 
 ## Pausa do serviço
 
-Interruptor para suspender o app (por exemplo, mensalidade em atraso). Controlado só pela YFX, na consola do Firebase.
+Interruptor para suspender o app (por exemplo, mensalidade em atraso). **Só a YFX o controla** (conta Google yassinibrahimo69@gmail.com); a conta da WR não consegue escrevê-lo, pelas regras.
 
-- **Pausar:** Firestore › coleção `config` › documento `estado` (criar se não existir) com o campo `pausado` (boolean) = `true`. Opcional: `mensagem` (texto) para mostrar aos utilizadores.
-- **Retomar:** pôr `pausado` = `false` (ou apagar o documento).
-- **Efeito:** todos os aparelhos online passam a mostrar "Em pausa" com o botão "Falar com a YFX"; as regras do Firestore bloqueiam a leitura e a escrita de dados (O.S., estoque, fotos) a todas as contas, incluindo o proprietário; o robô de avisos deixa de enviar notificações.
-- **Limite:** um aparelho sem internet continua a mostrar a cópia guardada, mas não sincroniza. Ao voltar online fica em pausa.
+- **Página do interruptor:** `yfx-admin.html` (privada, sem ligação no app; abrir `.../wr-os/yfx-admin.html`). Entrar com Google › Pausar (com mensagem opcional) › Confirmar. Para retomar: Retomar o serviço. Requer ativar o início de sessão Google em Firebase › Authentication › Sign-in method.
+- **Alternativa pela consola:** Firestore › `config/estado` com `pausado` (boolean) = `true`/`false` e `mensagem` (texto, opcional).
+- **Efeito:** todos os aparelhos online passam a mostrar o ecrã de erro "Serviço indisponível" com o botão "Contactar a YFX" (WhatsApp); as regras bloqueiam a leitura e escrita de dados a todas as contas da WR; o robô de avisos deixa de enviar notificações.
+- **Limite:** um aparelho sem internet mostra a cópia guardada, mas não sincroniza; ao voltar online fica em pausa.
 - **Regras:** o interruptor só é imposto depois de publicar o `firestore.rules` atualizado.

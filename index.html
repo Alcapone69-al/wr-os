@@ -555,6 +555,13 @@ img,video,canvas,svg{max-width:100%}
   .qty button{height:44px}
   .tab{min-height:56px}
 }
+/* ecrã de erro (serviço em pausa) */
+.errp .eic{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;color:var(--red2);background:rgba(227,30,30,.12);border:1px solid rgba(227,30,30,.4);box-shadow:0 0 0 8px rgba(227,30,30,.06)}
+.errp h1{font-size:30px}
+.errp .emsg{max-width:330px;font-size:15.5px;line-height:1.5;color:var(--ink2)}
+.errp .ecode{font:600 12px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.06em;color:var(--ink3);border:1px dashed var(--line);border-radius:8px;padding:5px 10px}
+.errp .btn{min-width:230px}
+.elnk{border:0;background:none;color:var(--ink2);font-weight:600;min-height:44px;padding:6px 12px;text-decoration:underline}
 /* telemóvel em paisagem: pouca altura */
 @media (orientation:landscape) and (max-height:500px){
   .tab{min-height:44px;flex-direction:row;justify-content:center;gap:8px;padding:4px 0}
@@ -804,8 +811,8 @@ function estadoPausa(on,p){S.pausaMsg=(p&&p.mensagem)||"";
 function pausaWatch(fs){try{if(pausaUn)pausaUn()}catch(e){}
   try{pausaUn=fs.doc("config/estado").onSnapshot(function(d){var p=d.exists?d.data():null;estadoPausa(!!(p&&p.pausado===true),p)},function(){})}catch(e){pausaUn=null}}
 function viewPausa(){
-  var m=S.pausaMsg||"O acesso à WR Oficina está temporariamente suspenso. Fale com a YFX para o reativar.";
-  return '<div class="login"><img class="llogo" src="logo-wr.jpg" alt="WR Auto Body" width="190" height="141"><h1>Em pausa</h1><p style="font-size:15px;color:var(--ink2);max-width:320px">'+esc(m)+'</p><a class="btn pri" href="https://wa.me/258861742006" target="_blank" rel="noopener">Falar com a YFX</a><button class="btn" data-act="logout">Terminar sessão</button></div>'}
+  var m=S.pausaMsg||"Não foi possível aceder à WR Oficina neste momento. Entre em contacto com a YFX para resolver.";
+  return '<div class="login errp"><img class="llogo" src="logo-wr.jpg" alt="WR Auto Body" width="120" height="89" style="width:120px"><div class="eic" aria-hidden="true"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><h1 role="alert">Serviço indisponível</h1><p class="emsg">'+esc(m)+'</p><div class="ecode">Código: YFX-PAUSA</div><a class="btn pri" href="https://wa.me/258861742006" target="_blank" rel="noopener">Contactar a YFX</a><button class="btn" data-act="retry">Tentar novamente</button><button class="elnk" data-act="logout">Terminar sessão</button></div>'}
 function fbStop(){fbUnsubs.forEach(function(u){try{u()}catch(e){}});fbUnsubs=[];S.os=[];S.estoque=[];S.raw={os:[],estoque:[]};S.fotos=[];S.config=null}
 async function initCloud(cfg){
   S.users=[FBU];
@@ -1900,6 +1907,7 @@ document.addEventListener("click",function(e){
     case "sheet-conta":sheetConta();break;
     case "goteam":closeSheet();go("team");break;
     case "logout":logout();break;
+    case "retry":location.reload();break;
     case "sheet-mypin":sheetMyPin();break;
     case "eye":{var pi=el.parentNode.querySelector("input");if(pi){pi.type=pi.type==="password"?"text":"password"}break}
     case "fill":{S.lg.email=el.dataset.e;S.lg.err="";render(true);var lp=$("#l-p");if(lp)lp.value=DEMOPW;break}
