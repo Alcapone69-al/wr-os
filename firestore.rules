@@ -1,0 +1,82 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Pausa do serviço: se /config/estado tiver pausado = true, ninguém lê nem escreve dados.
+    function emPausa() {
+      return exists(/databases/$(database)/documents/config/estado)
+        && get(/databases/$(database)/documents/config/estado).data.pausado == true;
+    }
+    // Dono da oficina: a conta única da WR vê e altera tudo.
+    function dono() {
+      return request.auth != null
+        && request.auth.token.email == 'wrautobodyapp@gmail.com'
+        && !emPausa();
+    }
+    // Utilizador de oficina: existe em /acessos/{e-mail} e está ativo.
+    function acesso() {
+      return get(/databases/$(database)/documents/acessos/$(request.auth.token.email)).data;
+    }
+    function utilizador() {
+      return request.auth != null
+        && !emPausa()
+        && exists(/databases/$(database)/documents/acessos/$(request.auth.token.email))
+        && acesso().ativo != false;
+    }
+    function daMinhaOficina(filial) {
+      return utilizador() && filial == acesso().filial;
+    }
+    function osDaMinhaOficina(osId) {
+      return utilizador()
+        && get(/databases/$(database)/documents/os/$(osId)).data.filial == acesso().filial;
+    }
+
+    // Interruptor de pausa: qualquer conta com sessão lê (para mostrar o ecrã de erro); só a conta da YFX escreve.
+    match /config/estado {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.token.email == 'yassinibrahimo69@gmail.com';
+    }
+
+    // Lista de utilizadores: só o dono escreve; cada utilizador lê o seu registo.
+    match /acessos/{email} {
+      allow read: if dono() || (request.auth != null && request.auth.token.email == email);
+      allow write: if dono();
+    }
+
+    // Ordens de serviço e estoque: cada utilizador só toca na sua oficina.
+    match /os/{id} {
+      allow read: if dono() || daMinhaOficina(resource.data.filial);
+      allow create: if dono() || daMinhaOficina(request.resource.data.filial);
+      allow update: if dono()
+        || (daMinhaOficina(resource.data.filial) && daMinhaOficina(request.resource.data.filial));
+      allow delete: if dono();
+    }
+    match /estoque/{id} {
+      allow read: if dono() || daMinhaOficina(resource.data.filial);
+      allow create: if dono() || daMinhaOficina(request.resource.data.filial);
+      allow update: if dono()
+        || (daMinhaOficina(resource.data.filial) && daMinhaOficina(request.resource.data.filial));
+      allow delete: if dono();
+    }
+
+    // Fotos: seguem a oficina da O.S. a que pertencem.
+    match /fotos/{id} {
+      allow read, delete: if dono() || osDaMinhaOficina(resource.data.osId);
+      allow create: if dono() || osDaMinhaOficina(request.resource.data.osId);
+    }
+
+    // Aparelhos para notificações push: qualquer utilizador regista o seu; só o dono os lê.
+    match /dispositivos/{id} {
+      allow create, update: if dono() || utilizador();
+      allow read, delete: if dono();
+    }
+
+    // Todo o resto (PIN do dono, avisos enviados, ...): só o dono.
+    // (o interruptor /config/estado fica de fora: só a YFX o escreve.)
+    match /{document=**} {
+      allow read, write: if dono()
+        && request.path != /databases/$(database)/documents/config/estado;
+    }
+  }
+}
