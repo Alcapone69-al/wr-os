@@ -52,7 +52,7 @@ Avisa: entrega atrasada / hoje / amanhã, lembretes vencidos, viatura pronta há
 
 Interruptor para suspender o app (por exemplo, mensalidade em atraso). **Só a YFX o controla** (conta Google yassinibrahimo69@gmail.com); a conta da WR não consegue escrevê-lo, pelas regras.
 
-- **Página do interruptor:** `yfx-admin.html` (privada, sem ligação no app; abrir `.../wr-os/yfx-admin.html`). Entrar com Google › Pausar (com mensagem opcional) › Confirmar. Para retomar: Retomar o serviço. Requer ativar o início de sessão Google em Firebase › Authentication › Sign-in method.
+- **Interruptor:** gerido pela YFX fora deste projecto.
 - **Alternativa pela consola:** Firestore › `config/estado` com `pausado` (boolean) = `true`/`false` e `mensagem` (texto, opcional).
 - **Efeito:** todos os aparelhos online passam a mostrar o ecrã de erro "Serviço indisponível" com o botão "Contactar a YFX" (WhatsApp); as regras bloqueiam a leitura e escrita de dados a todas as contas da WR; o robô de avisos deixa de enviar notificações.
 - **Limite:** um aparelho sem internet mostra a cópia guardada, mas não sincroniza; ao voltar online fica em pausa.
