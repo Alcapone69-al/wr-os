@@ -15,7 +15,7 @@ const db = admin.firestore();
 
 const estado = await db.doc("config/estado").get();
 if (estado.exists && estado.data().pausado === true) {
-  console.log("Serviço em pausa (config/estado): sem avisos.");
+  console.log("Serviço indisponível: sem avisos.");
   process.exit(0);
 }
 const [osSnap, devSnap] = await Promise.all([db.collection("os").get(), db.collection("dispositivos").get()]);

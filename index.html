@@ -555,7 +555,7 @@ img,video,canvas,svg{max-width:100%}
   .qty button{height:44px}
   .tab{min-height:56px}
 }
-/* ecrã de erro (serviço em pausa) */
+/* ecrã de erro */
 .errp .eic{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;color:var(--red2);background:rgba(227,30,30,.12);border:1px solid rgba(227,30,30,.4);box-shadow:0 0 0 8px rgba(227,30,30,.06)}
 .errp h1{font-size:30px}
 .errp .emsg{max-width:330px;font-size:15.5px;line-height:1.5;color:var(--ink2)}
@@ -803,7 +803,7 @@ function fbSub(col,flt){
     if(col==="os"&&S.mode==="loading")S.mode="cloud";render()},
    function(err){console.warn("db",col,err);if(S.mode==="loading")S.mode="cloud";toast(err&&err.code==="permission-denied"?"Sem permissão na base de dados":"Sem ligação à base de dados");render()});
   fbUnsubs.push(u)}
-/* ===== pausa do serviço (interruptor em config/estado, controlado pela YFX) ===== */
+/* ===== estado do serviço ===== */
 var pausaUn=null;
 function estadoPausa(on,p){S.pausaMsg=(p&&p.mensagem)||"";
   if(on){if(!S.pausa){S.pausa=true;fbStop();S.me=null;S.mode="cloud";S.usersReady=true}render(true)}
@@ -851,7 +851,7 @@ async function initCloud(cfg){
         if(k&&k.dono){entrar(FBU);return}
         if(k&&k.filial){entrar({id:"u:"+em,nome:k.nome||em,papel:"oficina",filial:k.filial,email:em,ativo:true});return}
         negar("Sem ligação à internet. Tente de novo.")});}
-      /* interruptor de pausa: lê primeiro (as regras bloqueiam o resto quando está em pausa) */
+      /* estado do serviço: lê primeiro */
       pausaWatch(fs);
       fs.doc("config/estado").get().then(function(d){var p=d.exists?d.data():null;if(p&&p.pausado===true){estadoPausa(true,p)}else seguir()},function(){seguir()});
     });

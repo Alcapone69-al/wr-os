@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Pausa do serviço: se /config/estado tiver pausado = true, ninguém lê nem escreve dados.
+    // Estado do serviço (config/estado).
     function emPausa() {
       return exists(/databases/$(database)/documents/config/estado)
         && get(/databases/$(database)/documents/config/estado).data.pausado == true;
@@ -31,7 +31,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/os/$(osId)).data.filial == acesso().filial;
     }
 
-    // Interruptor de pausa: qualquer conta com sessão lê (para mostrar o ecrã de erro); só a conta da YFX escreve.
+    // Estado do serviço: leitura com sessão; escrita restrita.
     match /config/estado {
       allow read: if request.auth != null;
       allow write: if request.auth != null
@@ -73,7 +73,7 @@ service cloud.firestore {
     }
 
     // Todo o resto (PIN do dono, avisos enviados, ...): só o dono.
-    // (o interruptor /config/estado fica de fora: só a YFX o escreve.)
+    // (config/estado fica de fora.)
     match /{document=**} {
       allow read, write: if dono()
         && request.path != /databases/$(database)/documents/config/estado;
