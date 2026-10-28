@@ -13,6 +13,11 @@ if (!raw) { console.error("Falta o segredo FIREBASE_SERVICE_ACCOUNT."); process.
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(raw)) });
 const db = admin.firestore();
 
+const estado = await db.doc("config/estado").get();
+if (estado.exists && estado.data().pausado === true) {
+  console.log("Serviço em pausa (config/estado): sem avisos.");
+  process.exit(0);
+}
 const [osSnap, devSnap] = await Promise.all([db.collection("os").get(), db.collection("dispositivos").get()]);
 const lista = osSnap.docs.map((d) => ({ ...d.data(), id: d.id }));
 const devs = devSnap.docs.map((d) => ({ ref: d.ref, token: d.data().token, filial: d.data().filial || "" })).filter((d) => d.token);

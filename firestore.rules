@@ -2,10 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Pausa do serviço: se /config/estado tiver pausado = true, ninguém lê nem escreve dados.
+    function emPausa() {
+      return exists(/databases/$(database)/documents/config/estado)
+        && get(/databases/$(database)/documents/config/estado).data.pausado == true;
+    }
     // Dono da oficina: a conta única da WR vê e altera tudo.
     function dono() {
       return request.auth != null
-        && request.auth.token.email == 'wrautobodyapp@gmail.com';
+        && request.auth.token.email == 'wrautobodyapp@gmail.com'
+        && !emPausa();
     }
     // Utilizador de oficina: existe em /acessos/{e-mail} e está ativo.
     function acesso() {
@@ -13,6 +19,7 @@ service cloud.firestore {
     }
     function utilizador() {
       return request.auth != null
+        && !emPausa()
         && exists(/databases/$(database)/documents/acessos/$(request.auth.token.email))
         && acesso().ativo != false;
     }
@@ -22,6 +29,11 @@ service cloud.firestore {
     function osDaMinhaOficina(osId) {
       return utilizador()
         && get(/databases/$(database)/documents/os/$(osId)).data.filial == acesso().filial;
+    }
+
+    // Interruptor de pausa: qualquer conta com sessão lê (para mostrar "Em pausa"); só a YFX escreve, pela consola.
+    match /config/estado {
+      allow read: if request.auth != null;
     }
 
     // Lista de utilizadores: só o dono escreve; cada utilizador lê o seu registo.

@@ -796,6 +796,16 @@ function fbSub(col,flt){
     if(col==="os"&&S.mode==="loading")S.mode="cloud";render()},
    function(err){console.warn("db",col,err);if(S.mode==="loading")S.mode="cloud";toast(err&&err.code==="permission-denied"?"Sem permissão na base de dados":"Sem ligação à base de dados");render()});
   fbUnsubs.push(u)}
+/* ===== pausa do serviço (interruptor em config/estado, controlado pela YFX) ===== */
+var pausaUn=null;
+function estadoPausa(on,p){S.pausaMsg=(p&&p.mensagem)||"";
+  if(on){if(!S.pausa){S.pausa=true;fbStop();S.me=null;S.mode="cloud";S.usersReady=true}render(true)}
+  else if(S.pausa){S.pausa=false;location.reload()}}
+function pausaWatch(fs){try{if(pausaUn)pausaUn()}catch(e){}
+  try{pausaUn=fs.doc("config/estado").onSnapshot(function(d){var p=d.exists?d.data():null;estadoPausa(!!(p&&p.pausado===true),p)},function(){})}catch(e){pausaUn=null}}
+function viewPausa(){
+  var m=S.pausaMsg||"O acesso à WR Oficina está temporariamente suspenso. Fale com a YFX para o reativar.";
+  return '<div class="login"><img class="llogo" src="logo-wr.jpg" alt="WR Auto Body" width="190" height="141"><h1>Em pausa</h1><p style="font-size:15px;color:var(--ink2);max-width:320px">'+esc(m)+'</p><a class="btn pri" href="https://wa.me/258861742006" target="_blank" rel="noopener">Falar com a YFX</a><button class="btn" data-act="logout">Terminar sessão</button></div>'}
 function fbStop(){fbUnsubs.forEach(function(u){try{u()}catch(e){}});fbUnsubs=[];S.os=[];S.estoque=[];S.raw={os:[],estoque:[]};S.fotos=[];S.config=null}
 async function initCloud(cfg){
   S.users=[FBU];
@@ -805,7 +815,7 @@ async function initCloud(cfg){
     try{await fs.enablePersistence({synchronizeTabs:true})}catch(e){}
     window.__fbAuth=auth;
     auth.onAuthStateChanged(function(u){
-      if(!u){fbStop();db=null;S.me=null;S.users=[FBU];S.mode="cloud";S.usersReady=true;render(true);return}
+      if(!u){S.pausa=false;try{if(pausaUn)pausaUn()}catch(e){}pausaUn=null;fbStop();db=null;S.me=null;S.users=[FBU];S.mode="cloud";S.usersReady=true;render(true);return}
       db=fs;FBU.email=u.email||"";S.usersReady=true;S.mode="loading";
       var em=String(u.email||"").toLowerCase(),ck="wr_me_"+em;
       function entrar(me){
@@ -815,7 +825,7 @@ async function initCloud(cfg){
         setTimeout(function(){if(notifState()==="granted")pushEnable(true)},3000);
         S.view="home";S.id=null;render(true)}
       function negar(msg){lsSet(ck,null);toast(msg);try{auth.signOut()}catch(e){}}
-      fs.doc("acessos/"+em).get().then(function(d){
+      function seguir(){fs.doc("acessos/"+em).get().then(function(d){
         if(!d.exists){
           /* sem registo em /acessos: só o dono passa (as regras só lhe deixam ler /config) */
           fs.doc("config/dono").get().then(function(){lsSet(ck,{dono:1});entrar(FBU)},function(er){
@@ -833,7 +843,11 @@ async function initCloud(cfg){
         var k=lsGet(ck,null);
         if(k&&k.dono){entrar(FBU);return}
         if(k&&k.filial){entrar({id:"u:"+em,nome:k.nome||em,papel:"oficina",filial:k.filial,email:em,ativo:true});return}
-        negar("Sem ligação à internet. Tente de novo.")})});
+        negar("Sem ligação à internet. Tente de novo.")});}
+      /* interruptor de pausa: lê primeiro (as regras bloqueiam o resto quando está em pausa) */
+      pausaWatch(fs);
+      fs.doc("config/estado").get().then(function(d){var p=d.exists?d.data():null;if(p&&p.pausado===true){estadoPausa(true,p)}else seguir()},function(){seguir()});
+    });
   }catch(e){console.warn("cloud",e);S.users=[];toast("Não foi possível iniciar a nuvem. A usar este aparelho.");localLoad()}
 }
 function repoUpdate(col,item,patch){
@@ -1822,6 +1836,7 @@ function render(force){
   if(!force&&typing()){S.deferred=true;return}
   S.deferred=false;
   if(!S.usersReady||S.mode==="loading"){APP.innerHTML=topbar()+skeleton();$("#tabs").innerHTML="";return}
+  if(S.pausa){APP.dataset.v="pausa";APP.innerHTML=viewPausa();$("#tabs").innerHTML="";document.body.classList.add("lock");return}
   syncMe();
   if(!S.me){APP.dataset.v="login";APP.innerHTML=viewLogin();$("#tabs").innerHTML="";document.body.classList.add("lock");fxStart();return}
   document.body.classList.remove("lock");fxStop();

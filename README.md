@@ -47,3 +47,13 @@ Avisa: entrega atrasada / hoje / amanhã, lembretes vencidos, viatura pronta há
 
 - O GitHub pode atrasar o agendamento alguns minutos; não é por segundos.
 - O push depende do browser/sistema do aparelho estar autorizado a receber notificações.
+
+## Pausa do serviço
+
+Interruptor para suspender o app (por exemplo, mensalidade em atraso). Controlado só pela YFX, na consola do Firebase.
+
+- **Pausar:** Firestore › coleção `config` › documento `estado` (criar se não existir) com o campo `pausado` (boolean) = `true`. Opcional: `mensagem` (texto) para mostrar aos utilizadores.
+- **Retomar:** pôr `pausado` = `false` (ou apagar o documento).
+- **Efeito:** todos os aparelhos online passam a mostrar "Em pausa" com o botão "Falar com a YFX"; as regras do Firestore bloqueiam a leitura e a escrita de dados (O.S., estoque, fotos) a todas as contas, incluindo o proprietário; o robô de avisos deixa de enviar notificações.
+- **Limite:** um aparelho sem internet continua a mostrar a cópia guardada, mas não sincroniza. Ao voltar online fica em pausa.
+- **Regras:** o interruptor só é imposto depois de publicar o `firestore.rules` atualizado.
