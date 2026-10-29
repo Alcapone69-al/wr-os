@@ -811,7 +811,7 @@ function estadoPausa(on,p){S.pausaMsg=(p&&p.mensagem)||"";
 function pausaWatch(fs){try{if(pausaUn)pausaUn()}catch(e){}
   try{pausaUn=fs.doc("config/estado").onSnapshot(function(d){var p=d.exists?d.data():null;estadoPausa(!!(p&&p.pausado===true),p)},function(){})}catch(e){pausaUn=null}}
 function viewPausa(){
-  var m=S.pausaMsg||"Não foi possível aceder à WR Oficina neste momento. Entre em contacto com a YFX para resolver.";
+  var m=S.pausaMsg||"Não foi possível aceder à WR Oficina neste momento.";
   return '<div class="login errp"><img class="llogo" src="logo-wr.jpg" alt="WR Auto Body" width="120" height="89" style="width:120px"><div class="eic" aria-hidden="true"><svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><h1 role="alert">Serviço indisponível</h1><p class="emsg">'+esc(m)+'</p><div class="ecode">Código: YFX-PAUSA</div><a class="btn pri" href="https://wa.me/258861742006" target="_blank" rel="noopener">Contactar a YFX</a><button class="btn" data-act="retry">Tentar novamente</button><button class="elnk" data-act="logout">Terminar sessão</button></div>'}
 function fbStop(){fbUnsubs.forEach(function(u){try{u()}catch(e){}});fbUnsubs=[];S.os=[];S.estoque=[];S.raw={os:[],estoque:[]};S.fotos=[];S.config=null}
 async function initCloud(cfg){
